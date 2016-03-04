@@ -10,20 +10,17 @@
            http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd"
        default-autowire="byName" default-lazy-init="false">
-    <!-- 自动扫描dao和service包(自动注入) -->
-    <context:component-scan base-package="com.zzjz.smc.core.common.dao"/>
-    <context:component-scan base-package="com.zzjz.smc.core.common.service"/>
 
     <!-- 加载service,此时要排除要controller,因为controller已经spring-mvc中加载过了 -->
-    <context:component-scan base-package="com.zzjz.smc.*.service">
+    <context:component-scan base-package="com.zzjz.visual.*.service">
         <context:exclude-filter type="annotation"
                                 expression="org.springframework.stereotype.Controller"/>
     </context:component-scan>
 
     <!-- 引入属性文件 -->
-    <context:property-placeholder location="classpath:dbconfig.properties,classpath:authgw.properties"/>
+    <context:property-placeholder location="classpath:dbconfig.properties"/>
     <!-- 配置数据源1 -->
-    <bean name="dataSource_topo" class="com.alibaba.druid.pool.DruidDataSource"
+    <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
           init-method="init" destroy-method="close">
         <property name="url" value="${jdbc.url}"/>
         <property name="username" value="${jdbc.username}"/>
@@ -65,16 +62,7 @@
     </bean>
 
 
-    <!-- 数据源集合 -->
-    <bean id="dataSource"
-          class="com.zzjz.smc.core.extend.datasource.DynamicDataSource">
-        <property name="targetDataSources">
-            <map key-type="com.zzjz.smc.core.extend.datasource.DataSourceType">
-                <entry key="dataSource_topo" value-ref="dataSource_topo"/>
-            </map>
-        </property>
-        <property name="defaultTargetDataSource" ref="dataSource_topo"/>
-    </bean>
+
     <bean id="sessionFactory"
           class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
         <property name="dataSource" ref="dataSource"/>
@@ -92,7 +80,7 @@
         <!-- Entity自动注解 -->
         <property name="packagesToScan">
             <list>
-                <value>com.zzjz.smc.*.entity</value>
+                <value>com.zzjz.visual.*.entity</value>
             </list>
         </property>
     </bean>
@@ -118,7 +106,7 @@
     </bean>
     <tx:annotation-driven transaction-manager="transactionManager"/>
 
-    <bean id="jsonRespWrapper" class="com.zzjz.smc.utils.JsonRespWrapper"/>
+
     <!-- JSR303 Validator定义
     <bean id="validator"
         class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />-->
