@@ -8,24 +8,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+/**
+ *
+ */
 @Controller
 @RequestMapping("/visual")
 
 public class VisiualController {
     @Autowired
-
-
-
-
     TestService testService;
 
     @RequestMapping(value = "/index", method = RequestMethod.GET)
-    public String toIndex(){
+    public String toIndex() {
         return "chart/index";
     }
+
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public Object getList(){
+    public Object getList() {
         return JSONObject.toJSON(testService.getList());
     }
 }
