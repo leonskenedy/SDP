@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  *
  */
@@ -27,5 +29,15 @@ public class VisiualController {
     @ResponseBody
     public Object getList() {
         return JSONObject.toJSON(testService.getList());
+    }
+
+    @RequestMapping(value = "/views/**", method = RequestMethod.GET)
+    public String toViewPage(HttpServletRequest request) {
+        return "chart/" + request.getRequestURI().replaceAll(".+visual/", "");
+    }
+
+    @RequestMapping(value = "/directive/**", method = RequestMethod.GET)
+    public String toDirectivePage(HttpServletRequest request) {
+        return "chart/" + request.getRequestURI().replaceAll(".+visual/", "");
     }
 }
