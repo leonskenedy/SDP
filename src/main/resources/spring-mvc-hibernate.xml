@@ -10,7 +10,8 @@
            http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd"
        default-autowire="byName" default-lazy-init="false">
-
+    <context:component-scan base-package="com.zzjz.core.common.dao"/>
+    <context:component-scan base-package="com.zzjz.core.common.service"/>
     <!-- 加载service,此时要排除要controller,因为controller已经spring-mvc中加载过了 -->
     <context:component-scan base-package="com.zzjz.visual.*.service">
         <context:exclude-filter type="annotation"
