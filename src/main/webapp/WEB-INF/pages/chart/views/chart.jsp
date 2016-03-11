@@ -64,7 +64,7 @@
                     <p style="text-align: center;color: #ddd;">拖拽字段到这里<br />进行筛选</p>
                 </div>
             </div>
-            <div class="zzjz-visual-chart-graph" data-drop="true" jqyoui-droppable data-jqyoui-options="{greedy:true}" data-jqyoui-droppable="{onDrop:'removeDragData(\'y\')'}"></div>
+            <div id="echarts_div" class="zzjz-visual-chart-graph" data-drop="true" jqyoui-droppable data-jqyoui-options="{greedy:true}" data-jqyoui-droppable="{onDrop:'removeDragData(\'y\')'}"></div>
         </div>
     </div>
     <div class="zzjz-visual-chart-right" style="overflow-x: hidden;overflow-y: auto">

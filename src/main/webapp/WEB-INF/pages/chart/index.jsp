@@ -13,6 +13,7 @@
     <script src="${ctx}/js/lib/angular1.4.6.min.js"></script>
     <script src="${ctx}/js/lib/angular-dragdrop.min.js"></script>
     <script src="${ctx}/js/lib/angular-route.js"></script>
+    <script src="${ctx}/js/lib/echarts.js"></script>
     <script src="${ctx}/js/visual/index.js"></script>
 </head>
 <body ng-app="app">

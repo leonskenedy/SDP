@@ -264,9 +264,7 @@ app.controller("ChartController", function($scope, $http){
         "table_name":"产品",
         "description": ""
     };
-    resetChart = function(){
-
-    }
+    $scope.echart = echarts.init($("#echarts_div")[0]);
     $scope.$watch("chart.meta.level[0].y", function(newValue, oldValue){
         if(newValue.length == oldValue.length){
             var allEqual = true;
@@ -285,7 +283,9 @@ app.controller("ChartController", function($scope, $http){
             }
         }
         $http.post("../chart/update", JSON.stringify($scope.chart)).success(function(response){
-            console.log("saved");
+            $scope.echart.dispose($("#echarts_div")[0]);
+            $scope.echart = echarts.init($("#echarts_div")[0]);
+            $scope.echart.setOption(response);
         });
     }, true)
     $scope.tableColumns = [
@@ -330,15 +330,20 @@ app.controller("ChartController", function($scope, $http){
     $scope.addDropYAxis = function(item){
         debugger;
         var columnEn = $(item.toElement).attr("column_en");
-        $scope.chart.yAxis = $scope.chart.yAxis ? $scope.chart.yAxis : [];
-        for(var i = 0; i < $scope.chart.columns.length; i++){
-            if(columnEn == $scope.chart.columns[i].column_en){
-                $scope.chart.yAxis.push({
-                    name:$scope.chart.columns[i].column_cn,
-                    column_name: $scope.chart.columns[i].column_en,
-                    data_type:$scope.chart.columns[i].column_type,
+        //$scope.chart.yAxis = $scope.chart.yAxis ? $scope.chart.yAxis : [];
+        for(var i = 0; i < $scope.tableColumns.length; i++){
+            if(columnEn == $scope.tableColumns[i].column_en){
+                $scope.chart.meta.level[0].y.push({
+                    name:$scope.tableColumns[i].column_cn,
+                    column_name: $scope.tableColumns[i].column_en,
+                    data_type:$scope.tableColumns.column_type,
                     aggregator_name:"计数",
-                    aggregator:"COUNT"
+                    aggregator:"COUNT",
+                    is_new:false,
+                    fid:$scope.tableColumns[i].column_en,
+                    formatter:"",
+                    uniq_id:new Date()+1,
+                    is_build_aggregated:0
                 });
                 return;
             }
