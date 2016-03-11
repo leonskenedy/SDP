@@ -1,5 +1,5 @@
 var app = angular.module("app", ['ngRoute', 'ngDragDrop']);
-app.config(function ($routeProvider) {
+app.config(function ($routeProvider, $httpProvider) {
     $routeProvider.when('/views/dashbord', {
         templateUrl: 'views/dashboard',
         controller: "dbController"
@@ -13,7 +13,34 @@ app.config(function ($routeProvider) {
         templateUrl: "views/chart",
         controller: "ChartController"
     })
-
+    $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+    /**   * The workhorse; converts an object to x-www-form-urlencoded serialization.   * @param {Object} obj   * @return {String}   */   var param = function (obj) {
+        var query = '', name, value, fullSubName, subName, subValue, innerObj, i;
+        for (name in obj) {
+            value = obj[name];
+            if (value instanceof Array) {
+                for (i = 0; i < value.length; ++i) {
+                    subValue = value[i];
+                    fullSubName = name + '[' + i + ']';
+                    innerObj = {};
+                    innerObj[fullSubName] = subValue;
+                    query += param(innerObj) + '&';
+                }
+            } else if (value instanceof Object) {
+                for (subName in value) {
+                    subValue = value[subName];
+                    fullSubName = name + '[' + subName + ']';
+                    innerObj = {};
+                    innerObj[fullSubName] = subValue;
+                    query += param(innerObj) + '&';
+                }
+            } else if (value !== undefined && value !== null)        query += encodeURIComponent(name) + '=' + encodeURIComponent(value) + '&';
+        }
+        return query.length ? query.substr(0, query.length - 1) : query;
+    };   // Override $http service's default transformRequest
+    $httpProvider.defaults.transformRequest = [function (data) {
+        return angular.isObject(data) && String(data) !== '[object File]' ? param(data) : data;
+    }];
 });
 app.controller("leftMenu", function ($scope, $location) {
     $scope.selectedItem = "dashbord";
@@ -234,8 +261,40 @@ app.controller("ChartController", function($scope, $http){
         },
         "name": "图标名称123",
         "tb_id": "product",
+        "table_name":"产品",
         "description": ""
     };
+    resetChart = function(){
+
+    }
+    $scope.$watch("chart.meta.level[0].y", function(newValue, oldValue){
+        if(newValue.length == oldValue.length){
+            var allEqual = true;
+            for(var i = 0; i < newValue.length; i++){
+                for(var prop in newValue[i]){
+                    if(prop.search(/^\$\$/) == 0 || prop == "isShow"){
+                        continue;
+                    }
+                    if(newValue[i][prop] != oldValue[i][prop]){
+                        allEqual = false;
+                    }
+                }
+            }
+            if(allEqual){
+                return;
+            }
+        }
+        $http.post("../chart/update", JSON.stringify($scope.chart)).success(function(response){
+            console.log("saved");
+        });
+    }, true)
+    $scope.tableColumns = [
+        {column_cn:"名称", column_en:"name", column_type:2},
+        {column_cn:"日期", column_en:"time", column_type:3},
+        {column_cn:"价格（元/公斤）", column_en:"price", column_type:1},
+        {column_cn:"类别", column_en:"type", column_type:2},
+        {column_cn:"出售方式", column_en:"selltype", column_type:2}
+    ]
     $scope.chartTypes = [
         {"id":1, "name":"表格", "typeName":"table"},
         {"id":2, "name":"指标卡", "typeName":"card"},
@@ -310,7 +369,11 @@ app.controller("ChartController", function($scope, $http){
         }
     }
     $scope.saveData = function(){
-
+        $http.post("../chart/update", JSON.stringify($scope.chart)).success(function(response){
+            if(response.success){
+                alert("保存成功.");
+            }
+        });
     }
 
     $scope.selectYAXisFormula = function(yAxis, f, t){
@@ -338,14 +401,15 @@ app.controller("ChartController", function($scope, $http){
 
     }
     $scope.removeDragData = function(arg){
+        debugger;
         var axisType = $(arg.toElement).attr("axis_type");
         var columnName =  $(arg.toElement).attr("column_name");
         var aggregator = $(arg.toElement).attr("aggregator")
         if(axisType){
             if(axisType == 'y'){
-                for(var i = 0, len = $scope.chart.yAxis.length; i < len; i++){
-                    if($scope.chart.yAxis[i].column_name == columnName && $scope.chart.yAxis[i].aggregator == aggregator){
-                        $scope.chart.yAxis.splice(i, 1);
+                for(var i = 0, len = $scope.chart.meta.level[0].y.length; i < len; i++){
+                    if($scope.chart.meta.level[0].y[i].fid == columnName && $scope.chart.meta.level[0].y[i].aggregator == aggregator){
+                        $scope.chart.meta.level[0].y.splice(i, 1);
                         return;
                     }
                 }

@@ -14,7 +14,7 @@
             <div style="border-bottom: 1px #ccc solid;padding-left: 15px">
                 <div style="overflow: hidden">
                     <h5>工作表</h5>
-                    <p ng-bind="chart.tableName[0].name"></p>
+                    <p ng-bind="chart.table_name"></p>
                     <a title="切换工作表">
                         <span class="zzjz-visual-chart-exchange"></span>
                     </a>
@@ -28,7 +28,7 @@
                     </div>
                 </div>
                 <div style="margin-left: 30px">
-                    <div data-jqyoui-options="{revert: 'invalid', helper: 'clone',appendTo:'body'}" data-drag="true" jqyoui-draggable ng-repeat="x in chart.columns" style="margin-bottom: 10px;cursor: pointer">
+                    <div data-jqyoui-options="{revert: 'invalid', helper: 'clone',appendTo:'body'}" data-drag="true" jqyoui-draggable ng-repeat="x in tableColumns" style="margin-bottom: 10px;cursor: pointer">
                         <span class="zzjz-visual-chart-column-{{getColumnTypeText(x.column_type)}}"></span>
                         <span ng-bind="x.column_cn" column_en="{{x.column_en}}"></span>
                     </div>
@@ -46,7 +46,7 @@
                 <div class="zzjz-visual-chart-xdiv zzjz-visual-chart-axis" style="padding: 6px;border-bottom: 1px solid #e5e5e5;height: 45px">
                     <span style="margin-left: 15px; float: left;line-height: 28px">维度</span>
                     <div style="margin-left: 65px;height: 28px" data-drop="true" jqyoui-droppable data-jqyoui-options="{greedy:true}" data-jqyoui-droppable="{onDrop:'addDropXAxis(\'y\')'}">
-                        <div class="zzjz-visual-chart-dragdrop" ng-repeat="x in chart.xAxis" ng-bind="x.label"></div>
+                        <div class="zzjz-visual-chart-dragdrop" ng-repeat="x in chart.meta.level[0].x" ng-bind="x.name"></div>
                     </div>
 
                 </div>
@@ -54,7 +54,7 @@
                     <span style="margin-left: 15px; float: left;line-height: 28px">数值</span>
                     <div style="margin-left: 65px;height: 28px" data-drop="true" jqyoui-droppable data-jqyoui-options="{greedy:true}" data-jqyoui-droppable="{onDrop:'addDropYAxis(\'y\')'}">
                         <!--<div class="zzjz-visual-chart-dragdrop" ng-repeat="x in chart.yAxis" ng-bind="x.label"></div>-->
-                        <yaxis ng-repeat="yAxis in chart.yAxis"></yaxis>
+                        <yaxis ng-repeat="yAxis in chart.meta.level[0].y"></yaxis>
                     </div>
                 </div>
             </div>

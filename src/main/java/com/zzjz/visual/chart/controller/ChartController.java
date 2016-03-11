@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,12 +43,12 @@ public class ChartController {
      */
     @RequestMapping(value = "update", method = RequestMethod.POST)
     @ResponseBody
-    public Object updateChart(@RequestBody String jsonString) {
+    public Object updateChart(@RequestBody String jsonString) throws UnsupportedEncodingException {
         JSONObject respJson = new JSONObject();
         respJson.put("flag", "0");
         respJson.put("msg", "success");
-
-        JSONObject json = (JSONObject) JSONObject.parse(jsonString);
+        jsonString = java.net.URLDecoder.decode(jsonString, "utf-8");
+        JSONObject json = (JSONObject) JSONObject.parse(jsonString.replaceAll("=$", ""));
         //图表ID
         String chart_id = JsonUtils.getJsonValue(json, "chart_id", UUID.randomUUID().toString());
         //数据源表ID
@@ -179,9 +180,9 @@ public class ChartController {
             }
             options.add(option);
         }
-//        options.get(0).exportToHtml("test.html");
+        options.get(0).exportToHtml("test.html");
         String optionStr = GsonUtil.format(options.get(0));
-        service.save(chart_id, jsonString, optionStr);
+        //service.save(chart_id, jsonString, optionStr);
         respJson.put("info", json);
         respJson.put("option", JSONObject.parse(optionStr));
 
