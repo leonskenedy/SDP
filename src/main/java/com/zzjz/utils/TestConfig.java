@@ -31,7 +31,7 @@ public interface TestConfig {
     /**
      * 测试文件生成的目录
      */
-    String EXPORT_PATH = "C:\\Users\\cnwan\\Desktop\\pages";
+    String EXPORT_PATH = "C:\\Users\\xhzhang\\Desktop\\YCB_20160309";
 
     /**
      * 通过view控制所有测试是否打开浏览器
