@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "level_fields": [],
+    "level": [
+      {
+        "show_y_axis_optional": false,
+        "sort": {
+          "axis": "y",
+          "type": "asc",
+          "fid": "fk165862ea",
+          "uniq_id": 1457418558891,
+          "col_index": 1
+        },
+        "top_compare": {
+          "enabled": false,
+          "reversed": 0,
+          "type": "items",
+          "value": 0
+        },
+        "yaxis_max_disabled": true,
+        "yaxis_unit": "元",
+        "yaxis_max": 14134370.080002,
+        "top": {
+          "enabled": false,
+          "reversed": "0",
+          "type": "percent",
+          "value": 2
+        },
+        "guide_line": [],
+        "y": [
+          {
+            "name": "价格（元/公斤）1",
+            "data_type": "number",
+            "aggregator": "SUM",
+            "aggregator_name": "去重计数",
+            "is_new": false,
+            "uniq_id": 1457575285931,
+            "fid": "price",
+            "is_build_aggregated": 0,
+            "alias_name": "价格（元/公斤）(去重计数)",
+            "percent": 12,
+            //数值显示格式
+            "formatter": {
+              //显示为数值
+              "num": {
+                //保留5位小数
+                "digit": 5,
+                //使用千分位分隔符
+                "millesimal": true
+              },
+              //显示为百分数
+              "percent": {
+                //保留0位小数
+                "digit": 0
+              },
+              //单选框选中为数值
+              "check": "num"
+            }
+          }
+        ],
+        "title_formula": "AVERAGE",
+        "chart_type": "C210",
+        "yaxis_min": 0,
+        "yaxis_min_disabled": true,
+        "x": [
+          {
+            "name": "类别",
+            "data_type": "string",
+            "is_new": false,
+            "fid": "type",
+            "granularity": "day",
+            "is_build_aggregated": 0
+          }
+        ],
+        "yaxis_name": "价格（元/公斤）A"
+      }
+    ],
+    "filter_list": [],
+    "filter_list_inner": {
+      "0": []
+    }
+  },
+  "name": "图标名称123",
+  "tb_id": "product",
+  "description": ""
+}
