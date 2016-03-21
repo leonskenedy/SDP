@@ -191,4 +191,10 @@ public class CommonServiceImpl implements CommonService {
         return genericBaseCommonDao.findByProperty(entityClass, propertyName, value);
     }
 
+    @Override
+    public List<List<String>> getArrayList(String sql, Object... objects) {
+        return  genericBaseCommonDao.getArrayList(sql, objects);
+    }
+
+
 }

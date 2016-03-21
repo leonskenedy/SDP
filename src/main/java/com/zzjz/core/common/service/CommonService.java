@@ -189,4 +189,6 @@ public interface CommonService {
      * 按属性查找对象列表.
      */
     public <T> List<T> findByProperty(Class<T> entityClass, String propertyName, Object value);
+
+    List<List<String>> getArrayList(String sql, Object... objects);
 }

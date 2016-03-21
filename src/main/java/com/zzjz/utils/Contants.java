@@ -12,6 +12,34 @@ public class Contants {
     public static final String AGG_TYPE_COUNT = "COUNT";
     public static final String AGG_TYPE_AVG = "AVG";
     public static final String AGG_TYPE_COUNT_DISTINCT = "COUNT_DISTINCT";
+    public static final String AGG_TYPE_MAX = "MAX";
+    public static final String AGG_TYPE_MIN = "MIN";
+    public static final String AGG_TYPE_PERCENT = "PERCENT";
+    /**
+     * 数据类型
+     */
+    public static final String DATA_TYPE_DATE = "date";
+    /**
+     * 日期粒度
+     */
+    public static final String GRANULARITY_TYPE_YEAR = "year";
+//    public static final String AGG_TYPE_COUNT = "COUNT";
+//    public static final String AGG_TYPE_AVG = "AVG";
+//    public static final String AGG_TYPE_COUNT_DISTINCT = "COUNT_DISTINCT";
+//    public static final String AGG_TYPE_MAX = "MAX";
+//    public static final String AGG_TYPE_MIN = "MIN";
+//    public static final String AGG_TYPE_PERCENT = "PERCENT"; /**
+
+    /**
+     * 高级计算
+     */
+    public static final String ADV_AGG_TYPE_PERCENTAGE = "percentage";
+//    public static final String AGG_TYPE_COUNT = "COUNT";
+//    public static final String AGG_TYPE_AVG = "AVG";
+//    public static final String AGG_TYPE_COUNT_DISTINCT = "COUNT_DISTINCT";
+//    public static final String AGG_TYPE_MAX = "MAX";
+//    public static final String AGG_TYPE_MIN = "MIN";
+//    public static final String AGG_TYPE_PERCENT = "PERCENT";
 
     /**
      * 筛选方式

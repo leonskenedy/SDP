@@ -212,4 +212,5 @@ public interface IGenericBaseCommonDao {
      */
     public <T> List<T> findByProperty(Class<T> entityClass,
                                       String propertyName, Object value);
+    List<List<String>> getArrayList(String sql, Object... objs);
 }
