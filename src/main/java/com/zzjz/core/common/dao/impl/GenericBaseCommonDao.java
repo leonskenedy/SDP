@@ -3,7 +3,6 @@ package com.zzjz.core.common.dao.impl;
 import com.google.common.collect.Lists;
 import com.zzjz.core.common.dao.IGenericBaseCommonDao;
 import com.zzjz.utils.DataUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.*;
 import org.hibernate.criterion.Criterion;
@@ -14,11 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
@@ -300,6 +296,22 @@ public class GenericBaseCommonDao<T, PK extends Serializable> implements IGeneri
         return this.jdbcTemplate.queryForList(sql, objs);
     }
 
+//    public void getArrayList(String sql, Objects... obj) {
+//        SqlRowSet sqlRow = this.jdbcTemplate.queryForRowSet(sql, obj);
+//        String[] names = sqlRow.getMetaData().getColumnNames();
+//        List<List<String>> list = new ArrayList<>(names.length);
+//        for (int i = 0; i < names.length; i++) {
+//            list.add(new ArrayList<String>());
+//        }
+//        while (sqlRow.next()) {
+//            for (int j = 1; j <= names.length; j++) {
+//                list.get(j).add(sqlRow.getString(j));
+//            }
+//        }
+//        String a = "a";
+//        System.out.println("GenericBaseCommonDao.java-->314:" + list);
+//    }
+
     public Integer executeSql(String sql, List<Object> param) {
         return this.jdbcTemplate.update(sql, param);
     }
@@ -442,6 +454,23 @@ public class GenericBaseCommonDao<T, PK extends Serializable> implements IGeneri
         return (List<T>) createCriteria(entityClass,
                 Restrictions.eq(propertyName, value)).list();
     }
+
+    @Override
+    public List<List<String>> getArrayList(String sql, Object... objs) {
+        SqlRowSet sqlRow = this.jdbcTemplate.queryForRowSet(sql, objs);
+        String[] names = sqlRow.getMetaData().getColumnNames();
+        List<List<String>> list = new ArrayList<>(names.length);
+        for (int i = 0; i < names.length; i++) {
+            list.add(new ArrayList<String>());
+        }
+        while (sqlRow.next()) {
+            for (int j = 1; j <= names.length; j++) {
+                list.get(j-1).add(sqlRow.getString(j));
+            }
+        }
+      return list;
+    }
+
 
     /**
      * 创建Criteria对象，有排序功能。
