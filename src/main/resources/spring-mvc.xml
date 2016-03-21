@@ -48,6 +48,13 @@
             <list>
                 <ref bean="mappingJacksonHttpMessageConverter"/>
                 <!--json转换器-->
+                <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                    <property name="supportedMediaTypes">
+                        <list>
+                            <value>text/plain;charset=UTF-8</value>
+                        </list>
+                    </property>
+                </bean>
             </list>
         </property>
     </bean>
