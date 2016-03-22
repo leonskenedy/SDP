@@ -46,7 +46,22 @@ $(document).ready(function(){
     });
     $("#" + panelIds.chartCenter).append(
         $("<div class='zzjz-faked-line-left'></div>")
-    )
+    ).append(
+        $("<div></div>").attr("class", "zzjz-axis-div")
+            .append($("<div></div>").attr("class", "zzjz-xaxis-div"))
+            .append($("<div></div>").attr("class", "zzjz-yaxis-div"))
+    );
+    $("<div class='zzjz-faked-line-bottom'></div>").appendTo($(".zzjz-xaxis-div"))
+    $("<a></a>").attr("class", "zzjz-axis-leader").linkbutton({
+        plain:true,
+        text: "维度"
+    }).appendTo($(".zzjz-xaxis-div"));
+    $("<div class='zzjz-faked-line-bottom'></div>").appendTo($(".zzjz-yaxis-div"))
+    $("<a></a>").attr("class", "zzjz-axis-leader").linkbutton({
+        plain:true,
+        text: "数值"
+    }).appendTo($(".zzjz-yaxis-div"))
+
     $("#" + panelIds.bodyCenter).layout("add",{
         region:"east",
         border: false,
@@ -96,14 +111,117 @@ $(document).ready(function(){
     $("#chart_column_list").datalist({
         valueField: "value",
         textField: "name",
-        data:[{name:"n1", value:"v1", data_type: 1},{name:"n2", value:"v2", data_type: 2},{name:"n3", value:"v3", data_type: 3}],
+        data:[{name:"n1eeeeeeeeeeeeeeeeeeee", value:"v1", data_type: 1},{name:"n2", value:"v2", data_type: 2},{name:"n3", value:"v3", data_type: 3}],
         textFormatter:function(value,row,index){
             return $("<div></div>").append(
                 $("<div></div>").attr("class", "zzjz-column-div").attr("column_name_cn", row.name)
                     .attr("column_name_en", row.value).attr("column_type", row.data_type)
-                    .append($("<span></span>").attr("class", "icon-data-type icon-data-type-"+row.data_type))
-                    .append($("<span></span>").text(row.name))
+                    .append($("<span></span>").attr("class", "l-btn-left l-btn-icon-left").append($("<span></span>").attr("class", "l-btn-text").text(row.name))
+                        .append($("<span></span>").attr("class", "l-btn-icon icon-data-type-"+row.data_type)))
             ).html();
         }
     })
+    //setupColumns($("#chart_column_list"))
+    //alert("cccc")
+    //drag-drop
+    $(".zzjz-column-div").draggable({
+        revert:true,
+        proxy: function(source){
+            var p = $('<div class="zzjz-column-div" style="border:1px solid #ccc;overflow: hidden;width: 95px"></div>');
+            p.attr("column_name_en", $(source).attr("column_name_en"));
+            p.attr("column_type", $(source).attr("column_type"));
+            p.attr("column_name_cn", $(source).attr("column_name_cn"))
+            p.html($(source).html()).appendTo('body');
+            return p;
+        },
+        onStartDrag:function(){
+            //$(this).draggable('options').cursor = 'not-allowed';
+            $(this).draggable('proxy').css('z-index',10).css("background-color", "steelblue");
+        }
+    })
+    $(".zzjz-yaxis-div").droppable({
+        accept: ".zzjz-column-div",
+        onDragEnter:function(e,source){
+            //$(source).draggable('options').cursor='auto';
+            $(source).draggable('proxy').css('border','1px solid red');
+            $(this).addClass('zzjz-axis-over');
+        },
+        onDragLeave:function(e,source){
+            //$(source).draggable('options').cursor='not-allowed';
+            $(source).draggable('proxy').css('border','1px solid #ccc');
+            $(this).removeClass('zzjz-axis-over');
+        },
+        onDrop:function(e,source){
+            var data = {
+                en: $(source).attr("column_name_en"),
+                cn: $(source).attr("column_name_cn"),
+                type: $(source).attr("data_type")
+            }
+            var id = +new Date()
+            $(this).append($("<a></a>").attr("id", id).attr("class", "zzjz-axis-item"));
+            $("#"+id).menubutton({
+                plain: true,
+                text: data.cn,
+                hasDownArrow: false,
+                menu:"#mm"
+            })
+            $(this).removeClass('zzjz-axis-over');
+        }
+    });
+
+
+    $(".zzjz-xaxis-div").droppable({
+        accept: ".zzjz-column-div",
+        onDragEnter:function(e,source){
+            //$(source).draggable('options').cursor='auto';
+            $(source).draggable('proxy').css('border','1px solid red');
+            $(this).addClass('zzjz-axis-over');
+        },
+        onDragLeave:function(e,source){
+            //$(source).draggable('options').cursor='not-allowed';
+            $(source).draggable('proxy').css('border','1px solid #ccc');
+            $(this).removeClass('zzjz-axis-over');
+        },
+        onDrop:function(e,source){
+            var data = {
+                en: $(source).attr("column_name_en"),
+                cn: $(source).attr("column_name_cn"),
+                type: $(source).attr("data_type")
+            }
+            var id = +new Date()
+            $(this).append($("<a></a>").attr("id", id).attr("class", "zzjz-axis-item"));
+            $("#"+id).menubutton({
+                plain: true,
+                text: data.cn,
+                hasDownArrow: false,
+                menu:"#mm"
+            })
+            $(this).removeClass('zzjz-axis-over');
+        }
+    });
+    $('#mm').menu({
+        minWidth: 70,
+        onClick:function(item){
+            //...
+        },
+        onShow: function(){
+            $(this).width($(".zzjz-axis-item:hover").width())
+            console.log($(".zzjz-axis-item:hover"))
+        },
+        onHide: function(){
+
+        }
+    });
+
 })
+
+function setupColumns(container){
+    var columns = [{name:"n1", value:"v1", data_type: 1},{name:"n2", value:"v2", data_type: 2},{name:"n3", value:"v3", data_type: 3}];
+    var ul = $("<ul></ul>").attr("class", "zzjz-column-ul");
+    for(var i = 0; i < columns.length; i++){
+        var row = columns[i];
+        $("<li class='zzjz-column-div'></li>").append($("<span></span>").attr("class", "l-btn-left l-btn-icon-left").append($("<span></span>").attr("class", "l-btn-text").text(row.name))
+            .append($("<span></span>").attr("class", "l-btn-icon icon-data-type-"+row.data_type))).appendTo(ul);
+    }
+    ul.appendTo(container);
+}

@@ -17,6 +17,12 @@
     </style>
 </head>
 <body style="margin: 0">
-
+<div id="mm">
+    <div data-options="name:'new'">New</div>
+    <div data-options="name:'save'">Save</div>
+    <div data-options="name:'print'">Print</div>
+    <div class="menu-sep"></div>
+    <div data-options="name:'exit'">Exit</div>
+</div>
 </body>
 </html>
