@@ -6,6 +6,8 @@
     <title></title>
     <script src="${ctx}/js/lib/jquery1.9.min.js"></script>
     <script src="${ctx}/js/lib/jquery.easyui.min.js"></script>
+    <script src="${ctx}/js/lib/echarts.js"></script>
+    <script src="${ctx}/js/utils.js"></script>
     <link type="text/css" rel="stylesheet" href="${ctx}/css/easyui.css">
     <link type="text/css" rel="stylesheet" href="${ctx}/css/icon.css">
     <link type="text/css" rel="stylesheet" href="${ctx}/css/ui.css">
@@ -18,11 +20,10 @@
 </head>
 <body style="margin: 0">
 <div id="mm">
-    <div data-options="name:'new'">New</div>
-    <div data-options="name:'save'">Save</div>
-    <div data-options="name:'print'">Print</div>
-    <div class="menu-sep"></div>
-    <div data-options="name:'exit'">Exit</div>
+    <div formula="SUM" data-options="name:'SUM'">求和</div>
+    <div formula="AVG" data-options="name:'AVG'">平均值</div>
+    <div formula="COUNT" data-options="name:'COUNT'">计数</div>
+    <div formula="D-COUNT" data-options="name:'COUNT_DISTINCT'">去重计数</div>
 </div>
 </body>
 </html>

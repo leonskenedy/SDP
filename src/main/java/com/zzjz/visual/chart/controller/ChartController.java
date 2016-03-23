@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,8 +47,13 @@ public class ChartController {
         respJson.put("msg", "success");
 //        System.out.println("ChartController.java-->50:" + );
 
-//        JSONObject json = (JSONObject) JSONObject.parse(URLDecoder.decode(jsonString, "utf-8").replaceAll("=$", ""));
-        JSONObject json = (JSONObject) JSONObject.parse(jsonString);
+        JSONObject json = null;
+        try {
+            json = (JSONObject) JSONObject.parse(java.net.URLDecoder.decode(jsonString, "utf-8").replaceAll("=$", ""));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        // JSONObject json = (JSONObject) JSONObject.parse(jsonString);
         //图表ID
         String chart_id = JsonUtils.getJsonValue(json, "chart_id", UUID.randomUUID().toString());
         //数据源表ID
