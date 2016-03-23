@@ -1,5 +1,6 @@
 package com.zzjz.visual.chart.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.zzjz.core.common.service.CommonService;
 
 import java.util.List;
@@ -38,12 +39,14 @@ public interface IChartService extends CommonService {
     /**
      * 根据x轴进行分组聚合查询
      *
-     * @param tb_id 表ID
-     * @param xFid  分组ID
-     * @param yFid  查询字段ID
+     * @param tb_id            表ID
+     * @param xFid             分组ID
+     * @param yFid             查询字段ID
+     * @param granularity      分组粒度
+     * @param granularity_name
      * @return 返回分组查询的字段的数据集合, 多个字段就是多个集合
      */
-    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid);
+    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name);
 
     /**
      * 返回查询字段的数据集合，多个字段就是多个集合
@@ -56,4 +59,21 @@ public interface IChartService extends CommonService {
     List<List<String>> getArrayList(String tb_id, String xFid, String yFid);
 
     List<Double> percentage(List<String> strings);
+
+    /**
+     * 保存chart工具栏
+     *
+     * @param chartId
+     * @param type       工具栏类型
+     * @param jsonString json参数
+     */
+    void saveToolbar(String chartId, String type, String jsonString);
+
+    /**
+     * 保存chart工具栏
+     *
+     * @param chartId
+     * @param granularity_name    工具栏日期类型自定义名称
+     */
+    JSONObject queryToolbarGranularity(String chartId, String granularity_name);
 }

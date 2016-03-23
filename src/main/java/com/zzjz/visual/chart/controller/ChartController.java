@@ -17,10 +17,7 @@ import com.zzjz.visual.chart.service.IChartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -136,13 +133,11 @@ public class ChartController {
                 JSONObject xItem = x.getJSONObject(i);
                 String xFid = xItem.getString("fid");
                 //字段数据类型
-                String data_type = xItem.getString("data_type");
-                if (Contants.DATA_TYPE_DATE.equals(data_type)) {
-                    String granularity = xItem.getString("granularity");
-                    if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
-                        
-                    }
-                }
+//                String data_type = xItem.getString("data_type");
+                String granularity = xItem.getString("granularity");
+                //自定义分组名称
+                String granularity_name = xItem.getString("granularity_name");
+                JSONObject granularity_type = service.queryToolbarGranularity(chart_id, granularity_name);
                 JSONArray y = item.getJSONArray("y");
                 //循环Y轴
                 for (int k = 0; k < y.size(); k++) {
@@ -189,15 +184,15 @@ public class ChartController {
                         aggregator = aggregator + "(" + yFid + ")";
                     }
 
-                    List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator);
-                    option.xAxis().add(new CategoryAxis().data(list.get(0).toArray()));
+                    List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type);
+                    option.xAxis().add(new CategoryAxis().data(list.get(1).toArray()));
                     //设置Y轴数据
                     Bar bar = new Bar(yName);
                     //高级计算百分比
                     if (Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
-                        bar.data(service.percentage(list.get(1)).toArray());
+                        bar.data(service.percentage(list.get(0)).toArray());
                     } else {
-                        bar.data(list.get(1).toArray());
+                        bar.data(list.get(0).toArray());
                     }
 
                     option.series().add(bar);
@@ -217,6 +212,21 @@ public class ChartController {
         service.save(chart_id, jsonString, optionStr);
         respJson.put("info", json);
         respJson.put("option", options.get(0).toString());
+        return respJson;
+    }
+
+    /**
+     * chart工具栏操作
+     *
+     * @return
+     */
+    @RequestMapping(value = "toolbar/{chartId}/{type}", method = RequestMethod.POST)
+    @ResponseBody
+    public Object updateToolbar(@PathVariable String chartId, @PathVariable String type, @RequestBody String jsonString) {
+        JSONObject respJson = new JSONObject();
+        respJson.put("flag", "0");
+        respJson.put("msg", "success");
+        service.saveToolbar(chartId, type, jsonString);
         return respJson;
     }
 
