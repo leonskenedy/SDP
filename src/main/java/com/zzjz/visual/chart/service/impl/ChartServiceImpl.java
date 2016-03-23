@@ -61,75 +61,106 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         sql.append(aggregator).append(",");
         if (granularity_type != null) {
             //{"week":[{"name":"cc","day_of_week":1}],"month":[{"name":"bb","day":1}],"year":[{"name":"aa","day":1,"month":2}]}
+            Integer day_of_week = granularity_type.getInteger("day_of_week");
+            Integer month = granularity_type.getInteger("month");
+            //自定义年
+            if (month != null) {
+                sql.append("CONCAT(IF (");
+                sql.append(xFid);
+                sql.append("> DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(", '%Y-");
+                sql.append(month);
+                sql.append("-");
+                sql.append(granularity_type.getInteger("day"));
+                sql.append("'),year(");
+                sql.append(xFid);
+                sql.append("),year(");
+                sql.append(xFid);
+                sql.append(")-1),'年')");
+                //自定义周分组
+            } else if (day_of_week != null) {
 
-            sql.append("CONCAT(IF (");
-            sql.append(xFid);
-            sql.append("> DATE_FORMAT(");
-            sql.append(xFid);
-            sql.append(", '%Y-11-30'),");
-            sql.append("year(");
-            sql.append(xFid);
-            sql.append("),year(");
-            sql.append(xFid);
-            sql.append(")-1),'年')");
-        }
-        //日期类型统计粒度
-        //年
-        if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
-            sql.append("DATE_FORMAT(");
-            sql.append(xFid);
-            sql.append(", '%Y年')");
-            //季度
-        } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
-            sql.append("CONCAT(YEAR (");
-            sql.append(xFid);
-            sql.append("time),'年第',QUARTER (time),'季度')");
-            //月
-        } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
-            sql.append("DATE_FORMAT(");
-            sql.append(xFid);
-            sql.append(", '%Y年%c月')");
-            //周
-        } else if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
-            sql.append("CONCAT(YEAR (");
-            sql.append(xFid);
-            sql.append("),'年第',WEEK (");
-            sql.append(xFid);
-            sql.append(", 1),'周（',DATE_FORMAT(date_add(");
-            sql.append(xFid);
-            sql.append("INTERVAL - DAYOFweek(");
-            sql.append(xFid);
-            sql.append(") + 2 DAY),'%c/%e'),'~',DATE_FORMAT(date_add(");
-            sql.append(xFid);
-            sql.append(",INTERVAL 7 - DAYOFweek(");
-            sql.append(xFid);
-            sql.append(") + 1 DAY),'%c/%e）'))");
-            //天
-        } else if (Contants.GRANULARITY_TYPE_DAY.equals(granularity)) {
-            sql.append("DATE_FORMAT(");
-            sql.append(xFid);
-            sql.append(", '%Y年%c月%e日')");
-            //时
-        } else if (Contants.GRANULARITY_TYPE_HOUR.equals(granularity)) {
-            sql.append("DATE_FORMAT(");
-            sql.append(xFid);
-            sql.append(",'%Y年%c月%e日 %H时')");
-            //分
-        } else if (Contants.GRANULARITY_TYPE_MINUTE.equals(granularity)) {
-            sql.append("DATE_FORMAT(");
-            sql.append(xFid);
-            sql.append(",'%Y年%c月%e日 %H时%i分')");
-            //秒
-        } else if (Contants.GRANULARITY_TYPE_SECOND.equals(granularity)) {
-            sql.append("DATE_FORMAT(");
-            sql.append(xFid);
-            sql.append(",'%Y年%c月%e日 %H时%i分%S秒')");
-        }
+                //自定义月分组
+            } else {
+                sql.append("CASE WHEN ");
+                sql.append(xFid);
+                sql.append("> DATE_FORMAT(time, '%Y-%c-");
+                sql.append(granularity_type.getInteger("day"));
+                sql.append("')");
+                sql.append("THEN DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(", '%Y年%c月')");
+                sql.append("WHEN month(");
+                sql.append(xFid);
+                sql.append(")=1");
+                sql.append("THEN CONCAT(year(");
+                sql.append(xFid);
+                sql.append(")-1,'年','12月')");
+                sql.append("ELSE  CONCAT(year(");
+                sql.append(xFid);
+                sql.append("),'年',month(");
+                sql.append(")-1,'月')END");
+            }
+        } else {
+            //日期类型统计粒度
+            //年
+            if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
+                sql.append("DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(", '%Y年')");
+                //季度
+            } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
+                sql.append("CONCAT(YEAR (");
+                sql.append(xFid);
+                sql.append("time),'年第',QUARTER (time),'季度')");
+                //月
+            } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
+                sql.append("DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(", '%Y年%c月')");
+                //周
+            } else if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
+                sql.append("CONCAT(YEAR (");
+                sql.append(xFid);
+                sql.append("),'年第',WEEK (");
+                sql.append(xFid);
+                sql.append(", 1),'周（',DATE_FORMAT(date_add(");
+                sql.append(xFid);
+                sql.append("INTERVAL - DAYOFweek(");
+                sql.append(xFid);
+                sql.append(") + 2 DAY),'%c/%e'),'~',DATE_FORMAT(date_add(");
+                sql.append(xFid);
+                sql.append(",INTERVAL 7 - DAYOFweek(");
+                sql.append(xFid);
+                sql.append(") + 1 DAY),'%c/%e）'))");
+                //天
+            } else if (Contants.GRANULARITY_TYPE_DAY.equals(granularity)) {
+                sql.append("DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(", '%Y年%c月%e日')");
+                //时
+            } else if (Contants.GRANULARITY_TYPE_HOUR.equals(granularity)) {
+                sql.append("DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(",'%Y年%c月%e日 %H时')");
+                //分
+            } else if (Contants.GRANULARITY_TYPE_MINUTE.equals(granularity)) {
+                sql.append("DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(",'%Y年%c月%e日 %H时%i分')");
+                //秒
+            } else if (Contants.GRANULARITY_TYPE_SECOND.equals(granularity)) {
+                sql.append("DATE_FORMAT(");
+                sql.append(xFid);
+                sql.append(",'%Y年%c月%e日 %H时%i分%S秒')");
+            }
 //        else if(){
 //
 //        }
-        else {//null
-            sql.append(xFid);
+            else {//null
+                sql.append(xFid);
+            }
         }
         sql.append(" AS xAxis FROM ").append(tb_id);
         sql.append(" GROUP BY xAxis ORDER BY xAxis");

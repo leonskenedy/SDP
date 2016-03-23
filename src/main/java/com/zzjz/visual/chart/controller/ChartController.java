@@ -138,9 +138,12 @@ public class ChartController {
             for (int j = 0; j < x.size(); j++) {
                 JSONObject xItem = x.getJSONObject(i);
                 String xFid = xItem.getString("fid");
+                String granularity = null;
                 //字段数据类型
-//                String data_type = xItem.getString("data_type");
-                String granularity = xItem.getString("granularity");
+                String data_type = xItem.getString("data_type");
+                if (Contants.DATA_TYPE_DATE.equals(data_type)) {
+                    granularity = xItem.getString("granularity");
+                }
                 //自定义分组名称
                 String granularity_name = xItem.getString("granularity_name");
                 JSONObject granularity_type = service.queryToolbarGranularity(chart_id, granularity_name);
@@ -195,7 +198,7 @@ public class ChartController {
                     //设置Y轴数据
                     Bar bar = new Bar(yName);
                     //高级计算百分比
-                    if (Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
+                    if (advance_aggregator != null && Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
                         bar.data(service.percentage(list.get(0)).toArray());
                     } else {
                         bar.data(list.get(0).toArray());
