@@ -207,15 +207,20 @@ $(document).ready(function(){
         },
         onDrop:function(e,source){
             var data = {
-                en: $(source).attr("column_en"),
-                cn: $(source).attr("column_cn"),
-                type: $(source).attr("column_type")
+                column_en: $(source).attr("column_en"),
+                column_cn: $(source).attr("column_cn"),
+                column_type: $(source).attr("column_type"),
+                class: "zzjz-axis-item",
+                id: +new Date()
             }
-            var id = +new Date()
-            $(this).append($("<a></a>").attr("id", id).attr("class", "zzjz-axis-item"));
-            $("#"+id).menubutton({
+            var axisItem = $("<a></a>");
+            for(var prop in data){
+                axisItem.attr(prop, data[prop]);
+            }
+            $(this).append(axisItem);
+            $("#"+data.id).menubutton({
                 plain: true,
-                text: data.cn,
+                text: data.column_cn,
                 hasDownArrow: false
             })
             $(this).removeClass('zzjz-axis-over');
@@ -225,7 +230,6 @@ $(document).ready(function(){
         minWidth: 70,
         onClick:function(item){
             //console.log($(".zzjz-axis-item:hover"))
-            debugger;
             window._hoverItem.attr("formula", item.name);
             _hoverItem.find(".l-btn-text").text(_hoverItem.attr("column_cn") + " ("+ item.text+")");
             resetEChartDiv();
