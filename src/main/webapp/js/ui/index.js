@@ -387,17 +387,17 @@ function gatherData(){
             formatter: {
                 check: $(this).attr("check") ? $(this).attr("check") : "num",
                 num:{
-                    digit:$(this).attr("d-digit")?$(this).attr("d-digit")*1 : 1,
+                    digit:$(this).attr("d-digit")?$(this).attr("d-digit")*1 : 0,
                     millesimal: $(this).attr("millesimal")? true: false
                 },
                 percent:{
                     digit:$(this).attr("p-digit") ? $(this).attr("p-digit")*1 : 0
                 }
             },
-            alias_name: $(this).text(),
+            alias_name: $(this).text()/*,
             advance_aggregator: {
                 type: "percentage"
-            }
+            }*/
         })
     });
 
