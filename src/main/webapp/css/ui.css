@@ -71,3 +71,48 @@
 .icon-data-type-3{
     background:url('icons/data_date.png') no-repeat center center;
 }
+
+input[type=radio].zzjz-radiobox {
+    display: none;
+}
+input[type=radio].zzjz-radiobox:checked + .zzjz-label-radio{
+    background-position: 0 -19px;
+}
+.zzjz-label-radio{
+    padding-left: 24px;
+    height: 19px;
+    display: inline-block;
+    line-height: 19px;
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    vertical-align: middle;
+    cursor: pointer;
+    background-image: url("../img/radiobox.png");
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+}
+
+input[type=checkbox].zzjz-checkbox {
+    position: absolute;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    width: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+}
+input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
+    background-position: 0 -15px;
+}
+.zzjz-label-check{
+    padding-left: 20px;
+    height: 15px;
+    display: inline-block;
+    line-height: 15px;
+    background-repeat: no-repeat;
+    background-image: url("../img/checkbox.png");
+    background-position: 0 0;
+    vertical-align: middle;
+    cursor: pointer;
+}
