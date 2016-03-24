@@ -29,6 +29,15 @@
     <div class="menu-sep"></div>
     <div format="VALUE_FORMAT" data-options="name:'VALUE_FORMAT'">数值显示格式</div>
 </div>
+<!-- xAxis menu -->
+<%--<div id="mm_xaxis">--%>
+    <%--<div by="YEAR" data-options="name:'YEAR'">按年</div>--%>
+    <%--<div by="SEASON" data-options="name:'SEASON'">按季</div>--%>
+    <%--<div by="MONTH" data-options="name:'MONTH'">按月</div>--%>
+    <%--<div by="WEEK" data-options="name:'WEEK'">按周</div>--%>
+    <%--<div by="DAY" data-options="name:'DAY'">按日</div>--%>
+    <%--<div by="MANUAL" data-options="name:'MANUAL'">自定义</div>--%>
+<%--</div>--%>
 <!-- yAxis data formatter dialog -->
 <div id="value_format_dialog" class="easyui-dialog" title="数值格式设定" data-options="iconCls:'icon-save',closed:true, modal:true" style="width:400px;height:220px;padding: 10px">
     <div style="margin-bottom: 10px">

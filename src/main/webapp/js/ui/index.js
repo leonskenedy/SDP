@@ -223,6 +223,9 @@ $(document).ready(function(){
                 class: "zzjz-axis-item",
                 id: +new Date()
             }
+            if(data.column_type == "3"){
+                data.granularity = "day"
+            }
             var axisItem = $("<a></a>");
             for(var prop in data){
                 axisItem.attr(prop, data[prop]);
@@ -230,9 +233,14 @@ $(document).ready(function(){
             $(this).append(axisItem);
             $("#"+data.id).menubutton({
                 plain: true,
-                text: data.column_cn,
+                text: data.column_cn + (data.granularity ? "(按日)" : ""),
                 hasDownArrow: false
             });
+            if(data.column_type == "3"){
+                $("#"+data.id).menubutton({
+                    menu:"#mm_xaxis"
+                });
+            }
             $("#"+data.id).draggable({
                 revert:true,
                 proxy: function(source){
@@ -275,6 +283,8 @@ $(document).ready(function(){
         onHide: function(){
         }
     });
+
+    initXAxisMenu();
     resetEChartDiv();
     $(".zzjz-echart-div").droppable({
         accept: ".zzjz-axis-item",
@@ -397,7 +407,7 @@ function gatherData(){
             data_type: dataType[$(this).attr("column_type")],
             is_new:false,
             fid: $(this).attr("column_en"),
-            granularity: "day",
+            granularity: $(this).attr("granularity")? $(this).attr("granularity"): "day",
             is_build_aggregated: 0
         })
     })
@@ -506,3 +516,60 @@ var chart = {
     "table_name":"产品",
     "description": ""
 };
+
+var xAxisMenuData = [
+    {text:"按年", name:"year"},
+    {text:"按季", name:"season"},
+    {text:"按月", name:"month"},
+    {text:"按周", name:"week"},
+    {text:"按日", name:"day"},
+    {text:"更多", name:"more", children:[
+        {text:"按时", name:"hour"},
+        {text:"按分", name:"minute"},
+        {text:"按秒", name:"second"}
+    ]},
+    {text:"自定义", name:"manual"}
+];
+
+function initXAxisMenu(){
+    var menu = $("<div></div>").attr("id", "mm_xaxis").appendTo($("body"));
+    menu.menu({
+        miniWidth:80,
+        onClick:function(item){
+            if($(item.target).attr("hasChild")){
+                return;
+            }else{
+                _hoverItem.attr("granularity", item.name)
+                _hoverItem.find(".l-btn-text").text(_hoverItem.attr("column_cn") + " ("+ item.text+")");
+                gatherData();
+            }
+        },
+        onShow: function(){
+            $("[by]").removeClass("zzjz-axis-item-selected");
+            window._hoverItem = $(".zzjz-axis-item:hover");
+
+            $("[by="+ window._hoverItem.attr("granularity")+"]").addClass("zzjz-axis-item-selected");
+        }
+    });
+
+    for(var i = 0; i < xAxisMenuData.length; i++){
+        menu.menu("appendItem", {
+            text: xAxisMenuData[i].text,
+            name:xAxisMenuData[i].name,
+            id: "xaxis_menu_"+xAxisMenuData[i].name
+        });
+        $("#xaxis_menu_"+xAxisMenuData[i].name).attr("by", xAxisMenuData[i].name)
+        if(xAxisMenuData[i].children){
+            $("#xaxis_menu_"+xAxisMenuData[i].name).attr("hasChild", "true")
+            for(var k = 0; k < xAxisMenuData[i].children.length; k++){
+                menu.menu("appendItem", {
+                    parent: $("#xaxis_menu_"+xAxisMenuData[i].name)[0],
+                    text: xAxisMenuData[i].children[k].text,
+                    name:xAxisMenuData[i].children[k].name,
+                    id:"xaxis_menu_"+xAxisMenuData[i].children[k].name
+                });
+                $("#xaxis_menu_"+xAxisMenuData[i].children[k].name).attr("by", xAxisMenuData[i].children[k].name);
+            }
+        }
+    }
+}
