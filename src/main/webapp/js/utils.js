@@ -81,7 +81,7 @@ function tooltipFormatter(params, yAxis) {
 
         } else if (formatter.check == "percent") {
             var percent = formatter.percent;
-            var digit = percent.percent;
+            var digit = percent.digit;
             res += formatNumber(params[index].value, digit, 2);
         }
         res+="</span>";
