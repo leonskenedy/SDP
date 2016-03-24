@@ -2,7 +2,9 @@ package com.zzjz.visual.chart.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.github.abel533.echarts.AxisPointer;
 import com.github.abel533.echarts.axis.CategoryAxis;
+import com.github.abel533.echarts.axis.SplitLine;
 import com.github.abel533.echarts.axis.ValueAxis;
 import com.github.abel533.echarts.code.*;
 import com.github.abel533.echarts.feature.MagicType;
@@ -45,7 +47,6 @@ public class ChartController {
         JSONObject respJson = new JSONObject();
         respJson.put("flag", "0");
         respJson.put("msg", "success");
-//        System.out.println("ChartController.java-->50:" + );
 
         JSONObject json = null;
         try {
@@ -53,7 +54,6 @@ public class ChartController {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        // JSONObject json = (JSONObject) JSONObject.parse(jsonString);
         //图表ID
         String chart_id = JsonUtils.getJsonValue(json, "chart_id", UUID.randomUUID().toString());
         //数据源表ID
@@ -114,9 +114,12 @@ public class ChartController {
             option.title().text(json.getString("name")).x(X.center);
             //Tool.mark 无效
             option.toolbox().show(true).feature(Tool.dataZoom, Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
-            option.calculable(true).tooltip().trigger(Trigger.axis);
-            StringBuffer formatterFun = new StringBuffer("function (params){var res = params[0].name;");
+            option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
+            option.tooltip().padding(10).backgroundColor("white").borderColor("#7ABCE9").borderWidth(2);
+//            StringBuffer formatterFun = new StringBuffer("function (params){var res = params[0].name;");
+//            StringBuffer formatterFun = new StringBuffer("function (params){");
             ValueAxis valueAxis = new ValueAxis();
+            valueAxis.splitLine().show(false);
             JSONObject item = level.getJSONObject(i);
             String yaxis_unit = item.getString("yaxis_unit");
             //设置最大值
@@ -136,6 +139,7 @@ public class ChartController {
             //循环X轴
             JSONArray x = item.getJSONArray("x");
             for (int j = 0; j < x.size(); j++) {
+
                 JSONObject xItem = x.getJSONObject(i);
                 String xFid = xItem.getString("fid");
                 String granularity = null;
@@ -148,6 +152,7 @@ public class ChartController {
                 String granularity_name = xItem.getString("granularity_name");
                 JSONObject granularity_type = service.queryToolbarGranularity(chart_id, granularity_name);
                 JSONArray y = item.getJSONArray("y");
+                option.tooltip().formatter("function(params){return tooltipFormatter(params,'" + y + "');}");
                 //循环Y轴
                 for (int k = 0; k < y.size(); k++) {
                     JSONObject yItem = y.getJSONObject(k);
@@ -157,27 +162,7 @@ public class ChartController {
                     String aggregator = yItem.getString("aggregator");
                     //高级计算 cancel:取消percentage:百分比
                     JSONObject advance_aggregator = yItem.getJSONObject("advance_aggregator");
-                    //数值显示格式
-                    JSONObject formatter = yItem.getJSONObject("formatter");
-                    String check = formatter.getString("check");
-                    formatterFun.append("res += '<br/>' + params[").append(k).append("].seriesName ");
 
-                    if ("num".equals(check)) {//数值
-                        JSONObject num = formatter.getJSONObject("num");
-                        int digit = num.getInteger("digit");//精度
-                        if (num.getBoolean("millesimal")) {//使用千分位分隔符
-                            formatterFun.append("+ ' : ' + formatNumber(params[").append(k).append("].value,");
-                            formatterFun.append(digit).append(",1);");
-                        } else {
-                            formatterFun.append("+ ' : ' + formatNumber(params[").append(k).append("].value,");
-                            formatterFun.append(digit).append(",0);");
-                        }
-                    } else if ("percent".equals(check)) {//百分数
-                        JSONObject percent = formatter.getJSONObject("percent");
-                        int digit = percent.getInteger("digit");
-                        formatterFun.append("+ ' : ' + formatNumber(params[").append(k).append("].value,");
-                        formatterFun.append(digit).append(",2);");
-                    }
                     //去重计数
                     if (Contants.AGG_TYPE_COUNT_DISTINCT.equals(aggregator)) {
                         aggregator = Contants.AGG_TYPE_COUNT + "(DISTINCT " + yFid + ")";
@@ -194,7 +179,7 @@ public class ChartController {
                     }
 
                     List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type);
-                    option.xAxis().add(new CategoryAxis().data(list.get(1).toArray()));
+                    option.xAxis().add(new CategoryAxis().data(list.get(1).toArray()).splitLine(new SplitLine().show(false)));
                     //设置Y轴数据
                     Bar bar = new Bar(yName);
                     //高级计算百分比
@@ -212,8 +197,8 @@ public class ChartController {
 
                 }
             }
-            formatterFun.append("return res;}");
-            option.tooltip().formatter(formatterFun);
+//            formatterFun.append("return res;}");
+//            System.out.println(formatterFun);
             options.add(option);
         }
         options.get(0).exportToHtml("test.html");
@@ -221,6 +206,7 @@ public class ChartController {
         service.save(chart_id, jsonString, optionStr);
         respJson.put("info", json);
         respJson.put("option", options.get(0).toString());
+        System.out.println(options.get(0));
         return respJson;
     }
 

@@ -36,9 +36,9 @@ function formatNumber(num, cent, isThousand) {
     }
     if (isThousand == 2) {//百分数
         if (cent < 1) {
-            return (((sign) ? '' : '-') + num)+"%";
+            return (((sign) ? '' : '-') + num) + "%";
         } else {
-            return (((sign) ? '' : '-') + num + '.' + cents)+"%";
+            return (((sign) ? '' : '-') + num + '.' + cents) + "%";
         }
     }
     if (isThousand == 0) { //不需要千分位符.
@@ -58,4 +58,34 @@ function formatNumber(num, cent, isThousand) {
     } else {
         return (((sign) ? '' : '-') + num + '.' + cents);
     }
+}
+/**
+ * 格式化tooltip
+ * @param yAxis
+ */
+function tooltipFormatter(params, yAxis) {
+    console.log(params)
+    var res ='<span style="color: black">'+ params[0].name+'</span>';
+    yAxis = eval(yAxis);
+    $.each(yAxis, function (index) {
+        res += '<br/><span style="font-weight:bold;color: ' + params[index].color+'">' + params[index].seriesName + ' : ';
+        var formatter = this.formatter;
+        if (formatter.check == "num") {//数值
+            var num = formatter.num;
+            var digit = num.digit;//精度
+            if (num.millesimal) {//使用千分位分隔符
+                res += formatNumber(params[index].value, digit, 1);
+            } else {
+                res += formatNumber(params[index].value, digit, 0);
+            }
+
+        } else if (formatter.check == "percent") {
+            var percent = formatter.percent;
+            var digit = percent.percent;
+            res += formatNumber(params[index].value, digit, 2);
+        }
+        res+="</span>";
+    });
+
+    return res;
 }
