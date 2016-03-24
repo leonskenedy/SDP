@@ -1,4 +1,5 @@
 $(document).ready(function(){
+    //return;
     var panelIds = {
         bodyCenter: "body_panel_center",
         chartTop: "chart_panel_top",
@@ -11,12 +12,12 @@ $(document).ready(function(){
     /**
      * define body layout
      */
-    $("body").layout({fit:true});
-    $("body").layout("add", {
+    $("#container").layout({fit:true});
+    $("#container").layout("add", {
         region:"west",
         width:100
     });
-    $("body").layout("add", {
+    $("#container").layout("add", {
         region:"center",
         id: panelIds.bodyCenter
     });
@@ -185,7 +186,16 @@ $(document).ready(function(){
                 text: data.column_cn + " (计数)",
                 hasDownArrow: false,
                 menu:"#mm"
+            });
+            $("#"+data.id).draggable({
+                revert:true,
+                proxy: function(source){
+                    var p = $(source).clone();
+                    p.appendTo($("body"))
+                    return p;
+                }
             })
+
             $(this).removeClass('zzjz-axis-over');
             resetEChartDiv();
             gatherData();
@@ -222,14 +232,27 @@ $(document).ready(function(){
                 plain: true,
                 text: data.column_cn,
                 hasDownArrow: false
+            });
+            $("#"+data.id).draggable({
+                revert:true,
+                proxy: function(source){
+                    var p = $(source).clone();
+                    p.appendTo($("body"))
+                    return p;
+                }
             })
             $(this).removeClass('zzjz-axis-over');
+            resetEChartDiv();
+            gatherData();
         }
     });
     $('#mm').menu({
         minWidth: 70,
         onClick:function(item){
-            //console.log($(".zzjz-axis-item:hover"))
+            if(item.name == "VALUE_FORMAT"){
+                $("#value_format_dialog").dialog("open")
+                return;
+            }
             window._hoverItem.attr("formula", item.name);
             _hoverItem.find(".l-btn-text").text(_hoverItem.attr("column_cn") + " ("+ item.text+")");
             resetEChartDiv();
@@ -253,6 +276,86 @@ $(document).ready(function(){
         }
     });
     resetEChartDiv();
+    $(".zzjz-echart-div").droppable({
+        accept: ".zzjz-axis-item",
+        onDragEnter:function(e,source){
+            $(source).draggable('proxy').css("color", "red").find(".l-btn-text").css('text-decoration','line-through');
+        },
+        onDragLeave:function(e,source){
+            $(source).draggable('proxy').css("color", "").find(".l-btn-text").css('text-decoration','none');
+        },onDrop:function(e,source){
+            $(source).remove();
+            setTimeout(function(){
+                resetEChartDiv();
+                gatherData();
+            }, 1000)
+        }
+    });
+
+    $("#value_format_dialog").dialog({
+        buttons: [{
+            text:'保存',
+            iconCls:'icon-ok',
+            handler:function(){
+                //_hoverItem.removeAttr("check").removeAttr("d-digit").removeAttr("p-digit").removeAttr("millesimal");
+                _hoverItem.attr("check", "num").attr("d-digit", "1").attr("p-digit", "0").attr("millesimal", "true")
+                var check = $("#value_format_dialog input[name=format_number]:checked");
+                if(check.length > 0){
+                    if(check.attr("id") == "format_number"){
+                        _hoverItem.attr("check", "num")
+                    }else{
+                        _hoverItem.attr("check", "percent")
+                    }
+                    var dDigit = $("#number_precision").numberspinner("getValue");
+                    _hoverItem.attr("d-digit", dDigit? dDigit : "1");
+                    var pDigit = $("#percent_precision").numberspinner("getValue");
+                    _hoverItem.attr("p-digit", pDigit? pDigit : "1");
+                    if($("#thousand_sep").prop("checked")){
+                        _hoverItem.attr("millesimal", "true");
+                    }else{
+                        _hoverItem.attr("millesimal", "");
+                    }
+                }
+                $("#value_format_dialog").dialog("close");
+                gatherData()
+            }
+        },{
+            text:'取消',
+            handler:function(){
+                $("#value_format_dialog").dialog("close");
+            }
+        }],
+        onOpen:function(){
+            $("#value_format_dialog").find("input[type=radio]").prop("checked", false);
+            $("#value_format_dialog").find("input[type=checkbox]").prop("checked", false);
+            $("#number_precision").numberspinner("setValue", "");
+            $("#percent_precision").numberspinner("setValue", "");
+            var check = _hoverItem.attr("check");
+            var millesimal = _hoverItem.attr("millesimal");
+            if(check == "num"){
+                $("#value_format_dialog input[id=format_number]").prop("checked", true);
+                $("#number_precision").numberspinner("setValue", _hoverItem.attr("d-digit")?_hoverItem.attr("d-digit"):"");
+                if(millesimal){
+                    $("#value_format_dialog input[id=thousand_sep]").prop("checked", true);
+                }
+            }else if(check == "percent"){
+                $("#value_format_dialog input[id=format_percent]").prop("checked", true);
+                $("#percent_precision").numberspinner("setValue", _hoverItem.attr("p-digit")? _hoverItem.attr("p-digit") : "");
+            }
+        }
+    });
+    $("#value_format_dialog input[name=format_number]").bind("change", function(){
+        var id = $(this).attr("id");
+        if(id == "format_number"){
+            $("#percent_precision").numberspinner("setValue", "").numberspinner("disable");
+            $("#value_format_dialog input[id=thousand_sep]").prop("checked", false).prop("disabled", false);
+            $("#number_precision").numberspinner("setValue", "").numberspinner("enable");
+        }else{
+            $("#number_precision").numberspinner("setValue", "").numberspinner("disable");
+            $("#percent_precision").numberspinner("setValue", "").numberspinner("enable");
+            $("#value_format_dialog input[id=thousand_sep]").prop("checked", false).prop("disabled", true);
+        }
+    })
 });
 
 function resetEChartDiv(){
@@ -272,13 +375,13 @@ function gatherData(){
             fid: $(this).attr("column_en"),
             is_build_aggregated: 0,
             formatter: {
-                check: "num",
+                check: $(this).attr("check") ? $(this).attr("check") : "num",
                 num:{
-                    digit:1,
-                    millesimal: true
+                    digit:$(this).attr("d-digit")?$(this).attr("d-digit")*1 : 1,
+                    millesimal: $(this).attr("millesimal")? true: false
                 },
                 percent:{
-                    digit:0
+                    digit:$(this).attr("p-digit") ? $(this).attr("p-digit")*1 : 0
                 }
             },
             alias_name: $(this).text(),
