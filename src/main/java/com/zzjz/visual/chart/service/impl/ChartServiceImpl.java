@@ -56,7 +56,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
     }
 
     @Override
-    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type) {
+    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid) {
         StringBuffer sql = new StringBuffer("SELECT ");
         sql.append(aggregator).append(",");
         if (granularity_type != null) {
@@ -163,8 +163,31 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             }
         }
         sql.append(" AS xAxis FROM ").append(tb_id);
-        sql.append(" GROUP BY xAxis ORDER BY xAxis");
-        return getArrayList(sql.toString());
+        sql.append(" GROUP BY xAxis ORDER BY ");
+        if (StringUtils.isBlank(sortFid)) {
+            sql.append("xAxis");
+        } else {
+            sql.append(sortFid);
+        }
+
+        List<List<String>> list = getArrayList(sql.toString());
+        //是否勾选维度显示条目数
+        if (top.getBoolean("enabled") && !list.isEmpty()) {
+            List<String> item = list.get(1);
+            String topType = top.getString("type");
+            int numValue = top.getIntValue("value");
+            if (numValue > 0) {
+                if (topType.equals(Contants.TOP_TYPE_PERCENT)) {
+                    numValue = numValue / 100 * list.size();//百分比条目数
+                }
+                if (top.getIntValue("reversed") == 0) {//前
+                    list.set(1, item.subList(0, numValue));
+                } else if (top.getIntValue("reversed") == 1) {//后
+                    list.set(1, item.subList(numValue, list.size() - 1));
+                }
+            }
+        }
+        return list;
     }
 
     @Override

@@ -63,4 +63,10 @@ public class Contants {
 
     public static final String GUIDE_LINE_TYPE_CONSTANT = "constant";
     public static final String GUIDE_LINE_TYPE_CALCULATE= "calculate";
+
+    public static final String TOP_TYPE_ITEMS = "items";
+    public static final String TOP_TYPE_PERCENT = "percent";
+
+    public static final String SOTR_TYPE_DESC = "desc";
+    public static final String SOTR_TYPE_ASC = "asc";
 }
