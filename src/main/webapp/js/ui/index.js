@@ -365,6 +365,46 @@ $(document).ready(function(){
             $("#percent_precision").numberspinner("setValue", "").numberspinner("enable");
             $("#value_format_dialog input[id=thousand_sep]").prop("checked", false).prop("disabled", true);
         }
+    });
+
+
+    /**
+     * chart east layout definition
+     */
+    //chart title
+    $("<div style='position: relative'></div>").attr("id", "chart_name_div").append(
+        $("<div></div>").attr("class", "zzjz-title-div").text("图表标题")
+    ).append(
+        $("<div style='margin: 5px'></div>").append($("<input />").attr("id", "chart_name"))
+    ).append(
+        $("<div></div>").attr("class", "zzjz-faked-line-bottom")
+    ).append(
+        $("<div style='height: 10px'></div>")
+    ).appendTo($("#"+panelIds.chartEast));
+    $("#chart_name").textbox({}).textbox("setValue", "未命名图表");
+    //chart type
+    $("<div style='position: relative'></div>").attr("id", "chart_type_div").append(
+        $("<div></div>").attr("class", "zzjz-title-div").text("图表类型")
+    ).append(
+        $("<div></div>").append($("<ul></ul>").attr("class", "zzjz-chart-type-ul"))
+    ).append(
+        $("<div style='height: 10px'></div>")
+    ).append(
+        $("<div></div>").attr("class", "zzjz-faked-line-bottom")
+    ).appendTo($("#"+panelIds.chartEast));
+    var chartTypeUl = $(".zzjz-chart-type-ul");
+    for(var i = 0; i < chartTypes.length; i++){
+        $("<li></li>").append(
+            $("<span></span>").attr("class", "zzjz-chart-type zzjz-chart-type-"+chartTypes[i].typeName)
+        ).appendTo(chartTypeUl);
+    };
+
+    $(".zzjz-chart-type").bind("click", function(){
+        if($(this).hasClass("active")){
+            $(this).removeClass("active")
+        }else{
+            $(this).addClass("active")
+        }
     })
 });
 
@@ -519,7 +559,7 @@ var chart = {
 
 var xAxisMenuData = [
     {text:"按年", name:"year"},
-    {text:"按季", name:"season"},
+    {text:"按季", name:"quarter"},
     {text:"按月", name:"month"},
     {text:"按周", name:"week"},
     {text:"按日", name:"day"},
@@ -573,3 +613,27 @@ function initXAxisMenu(){
         }
     }
 }
+
+
+var chartTypes = [
+    {"id":1, "name":"表格", "typeName":"table"},
+    {"id":2, "name":"指标卡", "typeName":"card"},
+    {"id":3, "name":"计量图", "typeName":"metering"},
+    {"id":4, "name":"折线图", "typeName":"brokenLine"},
+    {"id":5, "name":"簇状柱型图", "typeName":"column1"},
+    {"id":6, "name":"堆积柱型图", "typeName":"column2"},
+    {"id":7, "name":"百分比柱型图", "typeName":"column3"},
+    {"id":8, "name":"瀑布图", "typeName":"waterfall"},
+    {"id":9, "name":"条形图", "typeName":"bar"},
+    {"id":10, "name":"堆积条形图", "typeName":"bar2"},
+    {"id":11, "name":"百分比形图", "typeName":"bar3"},
+    {"id":12, "name":"桑基图", "typeName":"sankey"},
+    {"id":13, "name":"饼图", "typeName":"pie"},
+    {"id":14, "name":"地图(面积)", "typeName":"maparea"},
+    {"id":15, "name":"地图(气泡)", "typeName":"mapbubble"},
+    {"id":16, "name":"雷达图", "typeName":"radar"},
+    {"id":17, "name":"双轴图", "typeName":"dualaxis"},
+    {"id":18, "name":"散点图", "typeName":"discrete"},
+    {"id":19, "name":"漏斗图", "typeName":"dropdown"},
+    {"id":20, "name":"云词", "typeName":"cloud"}
+]
