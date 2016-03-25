@@ -3,10 +3,13 @@ package com.zzjz.visual.chart.controller;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.abel533.echarts.AxisPointer;
+import com.github.abel533.echarts.Grid;
+import com.github.abel533.echarts.axis.AxisLabel;
 import com.github.abel533.echarts.axis.CategoryAxis;
 import com.github.abel533.echarts.axis.SplitLine;
 import com.github.abel533.echarts.axis.ValueAxis;
 import com.github.abel533.echarts.code.*;
+import com.github.abel533.echarts.data.PointData;
 import com.github.abel533.echarts.feature.MagicType;
 import com.github.abel533.echarts.json.GsonOption;
 import com.github.abel533.echarts.json.GsonUtil;
@@ -116,12 +119,16 @@ public class ChartController {
             option.toolbox().show(true).feature(Tool.dataZoom, Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
             option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
             option.tooltip().padding(10).backgroundColor("white").borderColor("#7ABCE9").borderWidth(2);
+            option.grid(new Grid().x(40).x2(100).y2(150));
 //            StringBuffer formatterFun = new StringBuffer("function (params){var res = params[0].name;");
 //            StringBuffer formatterFun = new StringBuffer("function (params){");
             ValueAxis valueAxis = new ValueAxis();
             valueAxis.splitLine().show(false);
             JSONObject item = level.getJSONObject(i);
             String yaxis_unit = item.getString("yaxis_unit");
+            //辅助线数组
+            JSONArray guideLineArr = item.getJSONArray("guide_line");
+
             //设置最大值
             if (!item.getBoolean("yaxis_max_disabled")) {
                 valueAxis.max(item.getString("yaxis_max"));
@@ -179,7 +186,11 @@ public class ChartController {
                     }
 
                     List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type);
-                    option.xAxis().add(new CategoryAxis().data(list.get(1).toArray()).splitLine(new SplitLine().show(false)));
+                    CategoryAxis categoryAxis = new CategoryAxis().data(list.get(1).toArray()).splitLine(new SplitLine().show(false));
+                    if (list.get(1).size() > 15) {
+                        categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
+                    }
+                    option.xAxis().add(categoryAxis);
                     //设置Y轴数据
                     Bar bar = new Bar(yName);
                     //高级计算百分比
@@ -188,7 +199,49 @@ public class ChartController {
                     } else {
                         bar.data(list.get(0).toArray());
                     }
+                    for (int z = 0; z < guideLineArr.size(); z++) {
+                        JSONObject guide_line = guideLineArr.getJSONObject(z);
+                        String value_type = guide_line.getString("value_type");
+                        String fid = guide_line.getString("fid");
+                        if (yFid.equals(fid)) {
+                            String name = guide_line.getString("name");
+                            //固定值辅助线 jar包功能不完善，使用json代替
+                            if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
+//                                PointData pointData= new PointData(guide_line.getString("name"));
+//                                bar.markLine().data(lineData);
+                                int value = guide_line.getIntValue("value");
+                                JSONArray coordArray = new JSONArray();
+                                //起点
+                                JSONObject coordStart = new JSONObject();
+                                json.put("name", name);
+                                //x,y轴
+                                json.put("coord", new Object[]{bar.data().get(0), value});
+                                //终点
+                                JSONObject coordStop = new JSONObject();
+                                coordStop.put("coord", new Object[]{bar.data().get(bar.data().size() - 1), value});
+                                coordArray.add(coordStart);
+                                coordArray.add(coordStop);
 
+                                bar.markLine().data(coordArray);
+                                //计算值辅助线  最大值 最小值 平均值
+                            } else if (Contants.GUIDE_LINE_TYPE_CALCULATE.equals(value_type)) {
+                                PointData pointData = new PointData();
+                                pointData.name(name);
+                                String formula = guide_line.getString("formula");//AVG MIN MAX
+
+                                if (Contants.AGG_TYPE_AVG.equals(formula)) {
+                                    pointData.type(MarkType.average);
+                                } else if (Contants.AGG_TYPE_MAX.equals(formula)) {
+                                    pointData.type(MarkType.max);
+                                } else if (Contants.AGG_TYPE_MIN.equals(formula)) {
+                                    pointData.type(MarkType.min);
+                                }
+                                bar.markLine().data(pointData);
+                            }
+
+                        }
+
+                    }
                     option.series().add(bar);
 
                     option.legend().y(Y.bottom).data().add(yName);

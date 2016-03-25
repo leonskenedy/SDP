@@ -61,4 +61,6 @@ public class Contants {
     public static final String RANGE_TYPE_NOT_IN = "NOT IN";//不包含
 
 
+    public static final String GUIDE_LINE_TYPE_CONSTANT = "constant";
+    public static final String GUIDE_LINE_TYPE_CALCULATE= "calculate";
 }
