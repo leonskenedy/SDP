@@ -116,3 +116,123 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
     vertical-align: middle;
     cursor: pointer;
 }
+
+
+
+
+.zzjz-chart-type-ul{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.zzjz-chart-type-ul li{
+    display: inline-block;
+    width: 22%;
+    margin-left: 2%;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.zzjz-chart-type{
+    display: inline-block;
+    background-image: url("../img/chart_type.png");
+    background-repeat: no-repeat;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+.zzjz-chart-type-table{
+    background-position: -180px -564px;
+}
+.zzjz-chart-type-table .active{
+    background-position: -242px -566px;
+    background-color: white;
+    border: 2px solid;
+    border-radius: 4px;
+}
+.zzjz-chart-type-card{
+    background-position: -300px -504px;
+}
+.zzjz-chart-type-metering{
+    background-position: -588px -480px;
+}
+.zzjz-chart-type-brokenLine{
+    background-position: -420px -564px;
+}
+.zzjz-chart-type-column1{
+    background-position: -504px -396px;
+}
+
+.zzjz-chart-type-column1-active{
+    background-position: -650px -542px;
+    background-color: white;
+    border: 2px solid;
+    border-radius: 4px;
+}
+.zzjz-chart-type-column2{
+    background-position: -648px -420px;
+}
+.zzjz-chart-type-column3{
+    background-position: -648px -300px;
+}
+.zzjz-chart-type-waterfall{
+    background-position: -180px -504px;
+}
+.zzjz-chart-type-bar{
+    background-position: -648px -180px;
+}
+.zzjz-chart-type-bar2{
+    background-position: -648px -60px;
+}
+.zzjz-chart-type-bar3{
+    background-position: -540px -564px;
+}
+.zzjz-chart-type-sankey{
+    background-position: -420px -504px;
+}
+.zzjz-chart-type-pie{
+    background-position: -300px -564px;
+}
+.zzjz-chart-type-maparea{
+    background-position: -588px -360px;
+}
+.zzjz-chart-type-mapbubble{
+    background-position: -588px -240px;
+}
+.zzjz-chart-type-radar{
+    background-position: -588px 0px;
+}
+.zzjz-chart-type-dualaxis{
+    background-position: -60px -564px;
+}
+.zzjz-chart-type-discrete{
+    background-position: -588px -120px;
+}
+.zzjz-chart-type-dropdown{
+    background-position: -60px -504px;
+}
+.zzjz-chart-type-cloud{
+    background-position: 0px -564px;
+}
+
+.zzjz-chart-type-graphfilter{
+    background-image: url("../img/all_icon.png");
+    position: absolute;
+    top: 12px;
+    right: 10px;
+    cursor: pointer;
+    background-position: -518px -72px;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+.zzjz-chart-type-whitedown{
+    background-image: url("../img/all_icon.png");
+    background-position: -144px -450px;
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
