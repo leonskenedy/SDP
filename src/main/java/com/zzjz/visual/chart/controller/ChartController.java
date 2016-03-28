@@ -210,8 +210,8 @@ public class ChartController {
 
             String aggregator = StringUtils.join(aggregatorList, ",");
             List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid);
-            CategoryAxis categoryAxis = new CategoryAxis().data(list.get(1).toArray()).splitLine(new SplitLine().show(false));
-            if (list.get(1).size() > 15) {
+            CategoryAxis categoryAxis = new CategoryAxis().data(list.get(list.size()-1).toArray()).splitLine(new SplitLine().show(false));
+            if (list.get(list.size()-1).size() > 15) {
                 categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
             }
             option.xAxis().add(categoryAxis);
@@ -221,7 +221,7 @@ public class ChartController {
                 JSONObject advance_aggregator = advance_aggregators.get(i);
                 //高级计算百分比
                 if (advance_aggregator != null && Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
-                    bar.data(service.percentage(list.get(0)).toArray());
+                    bar.data(service.percentage(list.get(j)).toArray());
                 } else {
                     bar.data(list.get(j).toArray());
                 }
