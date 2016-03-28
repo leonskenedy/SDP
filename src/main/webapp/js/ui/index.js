@@ -406,6 +406,44 @@ $(document).ready(function(){
             $(this).addClass("active")
         }
     })
+
+    //chart subline
+    $("<div style='position: relative'></div>").attr("id", "chart_subline_div").append(
+        $("<div></div>").attr("class", "zzjz-title-div").text("辅助线").append($("<a style='float: right'></a>"))
+    ).append($("<div style='height: 10px'></div>")).append(
+        $("<div></div>").attr("class", "zzjz-faked-line-bottom")
+    ).appendTo($("#"+panelIds.chartEast));
+    $("#chart_subline_div").find(".zzjz-title-div").find("a").linkbutton({
+        iconCls: 'icon-edit',
+        plain:true,
+        onClick:function(){
+            $("#chart_subline_dialog").dialog("open");
+            setupSubline(+new Date())
+        }
+    });
+    $("#chart_subline_dialog").dialog({
+        toolbar: [{
+            text:'新增',
+            iconCls:'icon-add',
+            handler:function(){
+                setupSubline(+new Date())
+            }
+        }],
+        buttons:[
+            {
+                text:'保存',
+                iconCls:'icon-ok',
+                handler:function(){
+
+                }
+            },{
+                text:'取消',
+                handler:function(){
+                    $("#chart_subline_dialog").dialog("close");
+                }
+            }
+        ]
+    })
 });
 
 function resetEChartDiv(){
@@ -421,7 +459,7 @@ function gatherData(){
             aggregator: $(this).attr("formula"),
             aggregator_name: aggregatorName[$(this).attr("formula")],
             is_new:false,
-            uniq_id: 1457575285931,
+            uniq_id: $(this).attr("id"),
             fid: $(this).attr("column_en"),
             is_build_aggregated: 0,
             formatter: {
@@ -637,3 +675,53 @@ var chartTypes = [
     {"id":19, "name":"漏斗图", "typeName":"dropdown"},
     {"id":20, "name":"云词", "typeName":"cloud"}
 ]
+
+
+function setupSubline(id){
+
+    function fetchAxis(){
+        var result = [];
+        $(".zzjz-yaxis-div .zzjz-axis-item").each(function(){
+            result.push({
+                uniq_id: $(this).attr("id"),
+                text: $(this).text()
+            })
+        });
+        return result;
+    }
+
+
+    var div = $("<div style='margin-top: 10px' class='zzjz-edit-subline-div'></div>").attr("id", "edit_subline_div_"+id);
+    $("<input style='margin-left: 10px' class='zzjz-chart-subline-name' />").appendTo(div);
+    $("<select style='margin-left: 10px' class='zzjz-chart-subline-type'></select>").append(
+        $("<option></option>").attr("value", "fixed").text("计算值")
+    ).append(
+        $("<option></option>").attr("value", "calculated").text("固定值")
+    ).appendTo(div);
+    $("<input style='margin-left: 10px' class='zzjz-chart-subline-value' />").appendTo(div)
+    $("<a class='zzjz-chart-subline-remove'></a>").appendTo(div);
+    div.appendTo($("#chart_subline_dialog"));
+    div.find(".zzjz-chart-subline-name").textbox({width:100, prompt:"请输入名称"});
+    div.find(".zzjz-chart-subline-value").textbox({width:100, prompt:"请输入数值"});
+    div.find("select").combobox({width:100, onChange:function(newValue, oldValue){
+        if(newValue == "fixed"){
+            div.find(".zzjz-chart-subline-value").textbox("destroy");
+            div.find(".zzjz-chart-subline-remove").before($("<select class='zzjz-chart-subline-axis'></select>"));
+            div.find(".zzjz-chart-subline-axis").combobox({
+                data:fetchAxis(),
+                valueField:"uniq_id",
+                textField:"text",
+                width:100
+            });
+
+            div.find(".zzjz-chart-subline-remove").before($("<select class='zzjz-chart-subline-axis-value'></select>")
+                .append($("<option></option>").attr("value", "avg").text("平均值"))
+                .append($("<option></option>").attr("value", "max").text("最大值"))
+                .append($("<option></option>").attr("value", "min").text("最小值")));
+            div.find(".zzjz-chart-subline-axis-value").combobox({width:100});
+        }else{
+
+        }
+    }});
+    div.find(".zzjz-chart-subline-remove").linkbutton({plain:true, iconCls: "icon-remove",onClick:function(){$(this).parent().remove()}});
+}
