@@ -44,9 +44,11 @@ public interface IChartService extends CommonService {
      * @param yFid             查询字段ID
      * @param granularity      分组粒度
      * @param granularity_name
+     * @param top
+     * @param sort
      * @return 返回分组查询的字段的数据集合, 多个字段就是多个集合
      */
-    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name);
+    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name, JSONObject top, String sort);
 
     /**
      * 返回查询字段的数据集合，多个字段就是多个集合
