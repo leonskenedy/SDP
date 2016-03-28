@@ -19,6 +19,8 @@ public class Contants {
      * 数据类型
      */
     public static final String DATA_TYPE_DATE = "date";
+    public static final String DATA_TYPE_NUMBER = "number";
+    public static final String DATA_TYPE_STRING = "string";
     /**
      * 统计日期粒度
      */
@@ -62,11 +64,12 @@ public class Contants {
 
 
     public static final String GUIDE_LINE_TYPE_CONSTANT = "constant";
-    public static final String GUIDE_LINE_TYPE_CALCULATE= "calculate";
+    public static final String GUIDE_LINE_TYPE_CALCULATE = "calculate";
 
     public static final String TOP_TYPE_ITEMS = "items";
     public static final String TOP_TYPE_PERCENT = "percent";
 
     public static final String SOTR_TYPE_DESC = "desc";
     public static final String SOTR_TYPE_ASC = "asc";
+
 }

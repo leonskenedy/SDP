@@ -72,44 +72,134 @@ public class ChartController {
         JSONArray filter_list = meta.getJSONArray("filter_list");
         //图内筛选器
         JSONObject filter_list_inner = meta.getJSONObject("filter_list_inner");
-        /*"filter_list_inner": {
-            "0": []
-        }*/
 
         List<GsonOption> options = Lists.newArrayList();
         StringBuffer filterSql = new StringBuffer(200);
         for (int i = 0; i < filter_list.size(); i++) {
+
+            if (i != 0) {
+                filterSql.append(" AND ");
+            }
+
             JSONObject filterItem = filter_list.getJSONObject(i);
 
             String adv_type = filterItem.getString("adv_type");
             ////range_type 0 不包含  1包含
             String range_type = filterItem.getString("range_type");
-            //精确筛选
-            if (Contants.ADV_TYPE_EXACT.equals(adv_type)) {
-                filterSql.append(" and ").append(filterItem.getString("fid")).append(" ");
-                //全部包含
-                if (Contants.RANGE_TYPE_IN.equals(range_type)) {
-                    filterSql.append(Contants.RANGE_TYPE_IN);
-                    //全部不包含
-                } else if (Contants.RANGE_TYPE_NOT_IN.equals(range_type)) {
-                    filterSql.append(Contants.RANGE_TYPE_NOT_IN);
-                }
-                JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                for (int j = 0; j < rangeJsonArr.size(); j++) {
-                    String rangeStr = rangeJsonArr.getString(j);
-                    String[] rangeArr = rangeStr.substring(1, rangeStr.length() - 1).split(",");
-                    filterSql.append("(").append(StringUtils.join(rangeArr, ",")).append(") ");
-                }
-                //条件筛选
-            } else if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {
+            String data_type = filterItem.getString("data_type");
+            if (Contants.DATA_TYPE_DATE.equals(data_type)) {//日期类型
 
-                //表达式筛选
-            } else if (Contants.ADV_TYPE_EXPRESSION.equals(adv_type)) {
-                JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                for (int j = 0; j < rangeJsonArr.size(); j++) {
-                    filterSql.append(" and ").append(rangeJsonArr.getString(j));
+            } else if (Contants.DATA_TYPE_NUMBER.equals(data_type)) {//数字类型
+                if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {//条件筛选
+                    filterSql.append(" (");
+                    String fid = filterItem.getString("fid");
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        String rangeStr = rangeJsonArr.getString(j);
+                        JSONObject rangeJson = JSONObject.parseObject(rangeStr);
+
+                        JSONArray conditions = rangeJson.getJSONArray("conditions");
+                        for (int k = 0; k < conditions.size(); k++) {
+                            if (k != 0) {
+                                filterSql.append(" AND ");
+                            }
+                            filterSql.append(fid);
+
+                            JSONObject condition = conditions.getJSONObject(k);
+                            int calc_type = condition.getIntValue("calc_type");
+                            String value = condition.getString("value");
+                            if (calc_type == 0) {//等于
+                                filterSql.append("=").append(value);
+                            } else if (calc_type == 1) {//不等于
+                                filterSql.append("!=").append(value);
+                            } else if (calc_type == 2) {//大于
+                                filterSql.append(">").append(value);
+                            } else if (calc_type == 3) {//小于
+                                filterSql.append("<").append(value);
+                            } else if (calc_type == 4) {//大于等于
+                                filterSql.append(">=").append(value);
+                            } else if (calc_type == 5) {//小于等于
+                                filterSql.append("<=").append(value);
+                            }
+                        }
+
+                    }
+                    filterSql.append(")");
+                } else if (Contants.ADV_TYPE_EXPRESSION.equals(adv_type)) {//表达式筛选
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        filterSql.append(" (").append(rangeJsonArr.getString(j)).append(") ");
+                    }
+                }
+            } else if (Contants.DATA_TYPE_STRING.equals(data_type)) {//字符串类型
+                //精确筛选
+                if (Contants.ADV_TYPE_EXACT.equals(adv_type)) {
+                    filterSql.append(filterItem.getString("fid")).append(" ");
+                    //全部包含
+                    if (Contants.RANGE_TYPE_IN.equals(range_type)) {
+                        filterSql.append(Contants.RANGE_TYPE_IN);
+                        //全部不包含
+                    } else if (Contants.RANGE_TYPE_NOT_IN.equals(range_type)) {
+                        filterSql.append(Contants.RANGE_TYPE_NOT_IN);
+                    }
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        String rangeStr = rangeJsonArr.getString(j);
+                        String[] rangeArr = rangeStr.substring(1, rangeStr.length() - 1).split(",");
+                        filterSql.append(" (").append(StringUtils.join(rangeArr, ",")).append(") ");
+                    }
+                    //条件筛选
+                } else if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {
+                    filterSql.append(" (");
+                    String fid = filterItem.getString("fid");
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        String rangeStr = rangeJsonArr.getString(j);
+                        JSONObject rangeJson = JSONObject.parseObject(rangeStr);
+                        //1 满足任一条件  2满足所有条件
+                        String condition_type = rangeJson.getString("condition_type");
+                        JSONArray conditions = rangeJson.getJSONArray("conditions");
+                        for (int k = 0; k < conditions.size(); k++) {
+                            if (k != 0) {
+                                if ("1".equals(condition_type)) {//满足任一条件
+                                    filterSql.append(" OR ");
+                                } else if ("2".equals(condition_type)) {//满足所有条件
+                                    filterSql.append(" AND ");
+                                }
+                            }
+                            filterSql.append(fid);
+
+                            JSONObject condition = conditions.getJSONObject(k);
+                            int calc_type = condition.getIntValue("calc_type");
+                            String value = condition.getString("value");
+                            if (calc_type == 0) {//等于
+                                filterSql.append("='").append(value).append("'");
+                            } else if (calc_type == 1) {//不等于
+                                filterSql.append("!='").append(value).append("'");
+                            } else if (calc_type == 6) {//包含
+                                filterSql.append(" LIKE '%").append(value).append("%'");
+                            } else if (calc_type == 7) {//不包含
+                                filterSql.append(" NOT LIKE '%").append(value).append("%'");
+                            } else if (calc_type == 10) {//开头包含
+                                filterSql.append(" NOT LIKE '").append(value).append("%'");
+                            } else if (calc_type == 11) {//结尾包含
+                                filterSql.append(" NOT LIKE '%").append(value).append("'");
+                            }
+
+                        }
+
+                    }
+                    filterSql.append(")");
+                    //表达式筛选
+                } else if (Contants.ADV_TYPE_EXPRESSION.equals(adv_type)) {
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        filterSql.append(" (").append(rangeJsonArr.getString(j)).append(") ");
+                    }
                 }
             }
+
+
         }
         //循环层级对应的xy轴信息
         for (int i = 0; i < level.size(); i++) {
@@ -209,9 +299,9 @@ public class ChartController {
 
 
             String aggregator = StringUtils.join(aggregatorList, ",");
-            List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid);
-            CategoryAxis categoryAxis = new CategoryAxis().data(list.get(list.size()-1).toArray()).splitLine(new SplitLine().show(false));
-            if (list.get(list.size()-1).size() > 15) {
+            List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid,filterSql.toString());
+            CategoryAxis categoryAxis = new CategoryAxis().data(list.get(list.size() - 1).toArray()).splitLine(new SplitLine().show(false));
+            if (list.get(list.size() - 1).size() > 15) {
                 categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
             }
             option.xAxis().add(categoryAxis);
@@ -281,18 +371,26 @@ public class ChartController {
         return respJson;
     }
 
+
     /**
-     * chart工具栏操作
-     *
+     * @param chartId
+     * @param type       granularity_type 自定义日期粒度类型
+     * @param type       adv_date 日期筛选器
+     * @param jsonString
      * @return
      */
-    @RequestMapping(value = "toolbar/{chartId}/{type}", method = RequestMethod.POST)
+    @RequestMapping(value = "toolbar/{type}", method = RequestMethod.POST)
     @ResponseBody
-    public Object updateToolbar(@PathVariable String chartId, @PathVariable String type, @RequestBody String jsonString) {
+    public Object updateToolbar(@RequestParam(required = false) String chartId, @RequestParam(required = false) String optId, @PathVariable String type, @RequestBody String jsonString) {
         JSONObject respJson = new JSONObject();
         respJson.put("flag", "0");
         respJson.put("msg", "success");
-        service.saveToolbar(chartId, type, jsonString);
+        if(StringUtils.isNotBlank(optId)){//更新设置
+            service.updaToolbar(chartId, optId, type, jsonString);
+            respJson.put("optId", optId);
+        }else{//新增设置
+            respJson.put("optId", service.saveToolbar(chartId, type, jsonString));
+        }
         return respJson;
     }
 

@@ -46,9 +46,10 @@ public interface IChartService extends CommonService {
      * @param granularity_name
      * @param top
      * @param sort
+     * @param s
      * @return 返回分组查询的字段的数据集合, 多个字段就是多个集合
      */
-    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name, JSONObject top, String sort);
+    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name, JSONObject top, String sort, String s);
 
     /**
      * 返回查询字段的数据集合，多个字段就是多个集合
@@ -64,12 +65,11 @@ public interface IChartService extends CommonService {
 
     /**
      * 保存chart工具栏
-     *
-     * @param chartId
+     *  @param chartId
      * @param type       工具栏类型
      * @param jsonString json参数
      */
-    void saveToolbar(String chartId, String type, String jsonString);
+    String saveToolbar(String chartId, String type, String jsonString);
 
     /**
      * 保存chart工具栏
@@ -78,4 +78,13 @@ public interface IChartService extends CommonService {
      * @param granularity_name    工具栏日期类型自定义名称
      */
     JSONObject queryToolbarGranularity(String chartId, String granularity_name);
+
+    /**
+     * 更新工具栏
+     * @param chartId 图表ID
+     * @param optId 工具栏ID
+     * @param type 工具栏类型
+     * @param jsonString 工具栏详细参数
+     */
+    void updaToolbar(String chartId, String optId, String type, String jsonString);
 }

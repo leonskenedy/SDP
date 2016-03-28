@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by cnwan on 2016/3/7.
@@ -56,7 +57,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
     }
 
     @Override
-    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid) {
+    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql) {
         StringBuffer sql = new StringBuffer("SELECT ");
         sql.append(aggregator).append(",");
         if (granularity_type != null) {
@@ -162,7 +163,12 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
                 sql.append(xFid);
             }
         }
-        sql.append(" AS xAxis FROM ").append(tb_id);
+        sql.append(" AS xAxis FROM ").append(tb_id).append(" ");
+
+        if (StringUtils.isNotBlank(filterSql)) {//筛选器sql
+            sql.append(filterSql);
+        }
+
         sql.append(" GROUP BY xAxis ORDER BY ");
         if (StringUtils.isBlank(sortFid)) {
             sql.append("xAxis");
@@ -215,11 +221,20 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
     }
 
     @Override
-    public void saveToolbar(String chartId, String type, String jsonString) {
-        StringBuffer sql = new StringBuffer("INSERT INTO toolbar SET id=UUID_SHORT(),chart_id=?,");
+    public String saveToolbar(String chartId, String type, String jsonString) {
+        String uuid = UUID.randomUUID().toString();
+        StringBuffer sql = new StringBuffer("INSERT INTO toolbar SET id=?,");
+        List<String> params = new ArrayList<>();
         sql.append(type);
         sql.append("=?");
-        executeSql(sql.toString(), chartId, jsonString);
+        params.add(uuid);
+        params.add(jsonString);
+        if (StringUtils.isNotBlank(chartId)) {
+            sql.append(",chart_id=?");
+            params.add(chartId);
+        }
+        executeSql(sql.toString(), params.toArray());
+        return uuid;
     }
 
     @Override
@@ -242,6 +257,23 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             }
         }
         return null;
+    }
+
+    @Override
+    public void updaToolbar(String chartId, String optId, String type, String jsonString) {
+        StringBuffer sql = new StringBuffer();
+        List<String> params = new ArrayList<>();
+
+        sql.append("UPDATE toolbar SET ");
+        sql.append(type).append("=?");
+        params.add(jsonString);
+        if (StringUtils.isNotBlank(chartId)) {
+            sql.append(",chart_id=?");
+            params.add(chartId);
+        }
+        sql.append(" WHERE id=?");
+        params.add(optId);
+        executeSql(sql.toString(), params.toArray());
     }
 
 
