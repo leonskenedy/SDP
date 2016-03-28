@@ -434,7 +434,71 @@ $(document).ready(function(){
                 text:'保存',
                 iconCls:'icon-ok',
                 handler:function(){
-
+                    var sublines = $("#chart_subline_dialog").find(".zzjz-edit-subline-div");
+                    if(sublines.length == 0){
+                        $.messager.alert('提示','没有需要创建的辅助线','info');
+                        return;
+                    }
+                    var results = [];
+                    var flag = true;
+                    var message = "";
+                    sublines.each(function(index){
+                        var obj = {};
+                        if(flag){
+                            obj.name = $(this).find(".zzjz-chart-subline-name").textbox("getValue");
+                            if(obj.name == "" || obj.name == null){
+                                flag = false;
+                                message = "第"+(index+1)+"条名称为空";
+                            }
+                            obj.value_type = $(this).find(".zzjz-chart-subline-type").combobox("getValue");
+                            obj.value_type_text = $(this).find(".zzjz-chart-subline-type").combobox("getText");
+                            if(obj.value_type == "calculate"){
+                                obj.value = "";
+                                obj.uniq_id = $(this).find(".zzjz-chart-subline-axis").combobox("getValue");
+                                obj.fid = $("#" + obj.uniq_id).attr("column_en");
+                                obj.text = $("#" + obj.uniq_id).text();
+                                obj.is_build_aggregated = 0;
+                                obj.formula = $(this).find(".zzjz-chart-subline-axis-value").combobox("getValue");
+                                obj.formula_text = $(this).find(".zzjz-chart-subline-axis-value").combobox("getText");
+                            }else{
+                                obj.value = $(this).find(".zzjz-chart-subline-value").textbox("getValue");
+                                if(obj.value == "" || isNaN(obj.value * 1)){
+                                    flag = false;
+                                    message = "第"+(index+1)+"条,请选择正确的数值";
+                                }
+                                obj.value *= 1;
+                            }
+                            results.push(obj);
+                        }
+                    });
+                    if(!flag){
+                        $.messager.alert('错误',message,'error');
+                        return;
+                    }
+                    chart.meta.level[0].guide_line = results;
+                    var currentList = $("#chart_subline_div").find("#chart_subline_datalist");
+                    if(currentList.length > 0){
+                        currentList.datalist("destroy");
+                    }
+                    $("#chart_subline_div").find(".zzjz-title-div").after($("<div></div>").attr("id", "chart_subline_datalist"));
+                    $("#chart_subline_datalist").datalist({
+                        data:results,
+                        textField:"value_type_text",
+                        valueField:"name",
+                        textFormatter:function(value, row, index){
+                            var div = $("<div></div>");
+                            div.append($("<div></div>").attr("class", "zzjz-one-third-div").text(row.name));
+                            if(row.value_type == "calculate"){
+                                div.append($("<div></div>").attr("class", "zzjz-one-third-div").text(row.text));
+                                div.append($("<div></div>").attr("class", "zzjz-one-third-div").text(row.formula_text));
+                            }else{
+                                div.append($("<div></div>").attr("class", "zzjz-one-third-div").text(row.value));
+                            }
+                            return "<div>" + div.html() + "</div>";
+                        }
+                    });
+                    gatherData();
+                    $("#chart_subline_dialog").dialog("close");
                 }
             },{
                 text:'取消',
@@ -694,9 +758,9 @@ function setupSubline(id){
     var div = $("<div style='margin-top: 10px' class='zzjz-edit-subline-div'></div>").attr("id", "edit_subline_div_"+id);
     $("<input style='margin-left: 10px' class='zzjz-chart-subline-name' />").appendTo(div);
     $("<select style='margin-left: 10px' class='zzjz-chart-subline-type'></select>").append(
-        $("<option></option>").attr("value", "fixed").text("计算值")
+        $("<option></option>").attr("value", "calculate").text("计算值")
     ).append(
-        $("<option></option>").attr("value", "calculated").text("固定值")
+        $("<option selected></option>").attr("value", "constant").text("固定值")
     ).appendTo(div);
     $("<input style='margin-left: 10px' class='zzjz-chart-subline-value' />").appendTo(div)
     $("<a class='zzjz-chart-subline-remove'></a>").appendTo(div);
@@ -704,7 +768,7 @@ function setupSubline(id){
     div.find(".zzjz-chart-subline-name").textbox({width:100, prompt:"请输入名称"});
     div.find(".zzjz-chart-subline-value").textbox({width:100, prompt:"请输入数值"});
     div.find("select").combobox({width:100, onChange:function(newValue, oldValue){
-        if(newValue == "fixed"){
+        if(newValue == "calculate"){
             div.find(".zzjz-chart-subline-value").textbox("destroy");
             div.find(".zzjz-chart-subline-remove").before($("<select class='zzjz-chart-subline-axis'></select>"));
             div.find(".zzjz-chart-subline-axis").combobox({
@@ -715,12 +779,15 @@ function setupSubline(id){
             });
 
             div.find(".zzjz-chart-subline-remove").before($("<select class='zzjz-chart-subline-axis-value'></select>")
-                .append($("<option></option>").attr("value", "avg").text("平均值"))
-                .append($("<option></option>").attr("value", "max").text("最大值"))
-                .append($("<option></option>").attr("value", "min").text("最小值")));
+                .append($("<option></option>").attr("value", "AVG").text("平均值"))
+                .append($("<option></option>").attr("value", "MAX").text("最大值"))
+                .append($("<option></option>").attr("value", "MIN").text("最小值")));
             div.find(".zzjz-chart-subline-axis-value").combobox({width:100});
         }else{
-
+            div.find(".zzjz-chart-subline-axis").combobox("destroy");
+            div.find(".zzjz-chart-subline-axis-value").combobox("destroy");
+            div.find(".zzjz-chart-subline-remove").before($("<input style='margin-left: 10px' class='zzjz-chart-subline-value' />"));
+            div.find(".zzjz-chart-subline-value").textbox({width:100, prompt:"请输入数值"});
         }
     }});
     div.find(".zzjz-chart-subline-remove").linkbutton({plain:true, iconCls: "icon-remove",onClick:function(){$(this).parent().remove()}});
