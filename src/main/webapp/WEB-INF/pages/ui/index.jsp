@@ -57,5 +57,10 @@
         <input class="easyui-numberspinner" id="percent_precision" data-options="height:30,width:120,min:0" />
     </div>
 </div>
+
+
+<div id="chart_subline_dialog" class="easyui-dialog" title="添加辅助线" data-options="closed:true, modal:true" style="width:600px;height:300px;padding: 10px">
+
+</div>
 </body>
 </html>
