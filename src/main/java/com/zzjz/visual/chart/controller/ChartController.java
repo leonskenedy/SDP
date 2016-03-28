@@ -223,7 +223,7 @@ public class ChartController {
                 if (advance_aggregator != null && Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
                     bar.data(service.percentage(list.get(0)).toArray());
                 } else {
-                    bar.data(list.get(0).toArray());
+                    bar.data(list.get(j).toArray());
                 }
 
                 for (int z = 0; z < guideLineArr.size(); z++) {
