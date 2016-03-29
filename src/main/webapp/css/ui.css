@@ -246,3 +246,6 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
     width: 33.3%;
     overflow: hidden;
 }
+#chart_number_limit_div .textbox{
+    margin: 0px 3px 0px 0px;
+}

@@ -418,7 +418,6 @@ $(document).ready(function(){
         plain:true,
         onClick:function(){
             $("#chart_subline_dialog").dialog("open");
-            setupSubline(+new Date())
         }
     });
     $("#chart_subline_dialog").dialog({
@@ -508,6 +507,53 @@ $(document).ready(function(){
                 }
             }
         ]
+    });
+
+    //chart data number limit
+    $("<div style='position: relative'></div>").attr("id", "chart_number_limit_div").append(
+        $("<div></div>").attr("class", "zzjz-title-div")
+            .append($("<input type='checkbox' id='limit_check' class='zzjz-checkbox' />"))
+            .append($("<label class='zzjz-label-check'></label>").text("维度条件显示").attr("for", "limit_check"))
+    ).append(
+        $("<div id='limit_num_operate_div' style='display: none'></div>").append(
+            $("<select id='limit_type'></select>").append($("<option selected></option>").text("前").attr("value", "forward"))
+                .append($("<option></option>").text("后").attr("value", "backward"))
+        ).append($("<input id='limit_spinner' />")).append(
+            $("<select id='limit_unit'></select>").append($("<option selected />").text("项目").attr("value", "items"))
+                .append($("<option selected />").text("%").attr("value", "percent"))
+        )
+    ).append($("<div style='height: 10px'></div>")).append(
+        $("<div></div>").attr("class", "zzjz-faked-line-bottom")
+    ).appendTo($("#"+panelIds.chartEast));
+    $("#limit_type").add($("#limit_unit")).combobox({
+        width:50,
+        panelHeight:55,
+        onChange:function(nValue, oValue){
+            var item = chart.meta.level[0].top;
+            switch (nValue){
+                case "forward": item.reversed = 0;break;
+                case "backward": item.reversed = 1;break;
+                case "percent": item.type = "percent";break;
+                case "items": item.type = "items";break;
+            }
+            gatherData();
+        }
+    });
+    $('#limit_spinner').numberspinner({
+        min: 1,
+        width:60,
+        onChange:function(nValue, oValue){
+            chart.meta.level[0].top.value = nValue;
+        }
+    }).numberspinner("setValue", "10");
+    $("#limit_check").bind("change", function(){
+        if($(this).prop("checked")){
+            $("#limit_num_operate_div").show()
+            chart.meta.level[0].top.enabled = true;
+        }else{
+            $("#limit_num_operate_div").hide()
+            chart.meta.level[0].top.enabled = false;
+        }
     })
 });
 
