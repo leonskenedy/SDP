@@ -67,8 +67,12 @@
 .icon-more{
 	background:url('icons/more.png') no-repeat center center;
 }
-
-
+.icon-desc{
+    background:url('icons/descending.png') no-repeat center center;
+}
+.icon-asc{
+    background:url('icons/ascending.png') no-repeat center center;
+}
 .icon-mini-add{
 	background:url('icons/mini_add.png') no-repeat center center;
 }

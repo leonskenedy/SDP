@@ -257,8 +257,35 @@ $(document).ready(function(){
     $('#mm').menu({
         minWidth: 70,
         onClick:function(item){
+            if(item.name == "order"){
+                return;
+            }
             if(item.name == "VALUE_FORMAT"){
                 $("#value_format_dialog").dialog("open")
+                return;
+            }
+            if(item.name.search("_seq") > -1){
+                var sort = chart.meta.level[0].sort;
+
+                $(".zzjz-yaxis-div").find(".zzjz-axis-item").linkbutton({iconCls:""});
+                sort.fid = _hoverItem.attr("column_en");
+                sort.uniq_id = _hoverItem.attr("id");
+                sort.axis = "y";
+                switch (item.name){
+                    case "default_seq":
+                        _hoverItem.linkbutton({iconCls:""});
+                        sort.type = "";
+                        break;
+                    case "desc_seq":
+                        _hoverItem.linkbutton({iconCls:"icon-desc"});
+                        sort.type = "desc";
+                        break;
+                    case "asc_seq":
+                        _hoverItem.linkbutton({iconCls:"icon-asc"});
+                        sort.type = "asc";
+                        break;
+                }
+                gatherData();
                 return;
             }
             window._hoverItem.attr("formula", item.name);
@@ -283,7 +310,29 @@ $(document).ready(function(){
         onHide: function(){
         }
     });
-
+    $('#mm').menu('appendItem', {
+        separator: true
+    });
+    $('#mm').menu("appendItem",{
+        name:"order",
+        text:"排序",
+        id:"mm_order"
+    });
+    $('#mm').menu("appendItem",{
+        parent: $("#mm_order")[0],
+        name:"default_seq",
+        text:"默认"
+    });
+    $('#mm').menu("appendItem",{
+        parent: $("#mm_order")[0],
+        name:"asc_seq",
+        text:"升序"
+    });
+    $('#mm').menu("appendItem",{
+        parent: $("#mm_order")[0],
+        name:"desc_seq",
+        text:"将序"
+    });
     initXAxisMenu();
     resetEChartDiv();
     $(".zzjz-echart-div").droppable({
@@ -371,7 +420,7 @@ $(document).ready(function(){
     /**
      * chart east layout definition
      */
-    //chart title
+        //chart title
     $("<div style='position: relative'></div>").attr("id", "chart_name_div").append(
         $("<div></div>").attr("class", "zzjz-title-div").text("图表标题")
     ).append(
@@ -584,9 +633,9 @@ function gatherData(){
                 }
             },
             alias_name: $(this).text()/*,
-            advance_aggregator: {
-                type: "percentage"
-            }*/
+             advance_aggregator: {
+             type: "percentage"
+             }*/
         })
     });
 
