@@ -268,7 +268,7 @@ public class ChartController {
                 String aggregator = yItem.getString("aggregator");
                 //高级计算 cancel:取消percentage:百分比
                 advance_aggregators.add(yItem.getJSONObject("advance_aggregator"));
-
+                yIds.add(yFid);
                 //去重计数
                 if (Contants.AGG_TYPE_COUNT_DISTINCT.equals(aggregator)) {
                     aggregator = Contants.AGG_TYPE_COUNT + "(DISTINCT " + yFid + ")";
@@ -330,9 +330,9 @@ public class ChartController {
                             JSONArray coordArray = new JSONArray();
                             //起点
                             JSONObject coordStart = new JSONObject();
-                            json.put("name", name);
+                            coordStart.put("name", name);
                             //x,y轴
-                            json.put("coord", new Object[]{bar.data().get(0), value});
+                            coordStart.put("coord", new Object[]{bar.data().get(0), value});
                             //终点
                             JSONObject coordStop = new JSONObject();
                             coordStop.put("coord", new Object[]{bar.data().get(bar.data().size() - 1), value});

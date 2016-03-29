@@ -467,6 +467,7 @@ $(document).ready(function(){
                                     message = "第"+(index+1)+"条,请选择正确的数值";
                                 }
                                 obj.value *= 1;
+                                obj.fid = $(".zzjz-yaxis-div .zzjz-axis-item").first().attr("column_en");
                             }
                             results.push(obj);
                         }
