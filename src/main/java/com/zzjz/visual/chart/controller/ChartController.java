@@ -299,8 +299,9 @@ public class ChartController {
 
 
             String aggregator = StringUtils.join(aggregatorList, ",");
-            List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid,filterSql.toString());
-            CategoryAxis categoryAxis = new CategoryAxis().data(list.get(list.size() - 1).toArray()).splitLine(new SplitLine().show(false));
+            List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql.toString());
+            List<String> xAxis = list.get(list.size() - 1);//X轴
+            CategoryAxis categoryAxis = new CategoryAxis().data(xAxis.toArray()).splitLine(new SplitLine().show(false));
             if (list.get(list.size() - 1).size() > 15) {
                 categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
             }
@@ -326,16 +327,16 @@ public class ChartController {
                         if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
 //                                PointData pointData= new PointData(guide_line.getString("name"));
 //                                bar.markLine().data(lineData);
-                            int value = guide_line.getIntValue("value");
+                            double value = guide_line.getDouble("value");
                             JSONArray coordArray = new JSONArray();
                             //起点
                             JSONObject coordStart = new JSONObject();
                             coordStart.put("name", name);
                             //x,y轴
-                            coordStart.put("coord", new Object[]{bar.data().get(0), value});
+                            coordStart.put("coord", new Object[]{xAxis.get(0), value});
                             //终点
                             JSONObject coordStop = new JSONObject();
-                            coordStop.put("coord", new Object[]{bar.data().get(bar.data().size() - 1), value});
+                            coordStop.put("coord", new Object[]{xAxis.get(xAxis .size()-1), value});
                             coordArray.add(coordStart);
                             coordArray.add(coordStop);
 
