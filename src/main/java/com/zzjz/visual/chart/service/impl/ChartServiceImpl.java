@@ -114,7 +114,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
                 sql.append("CONCAT(YEAR (");
                 sql.append(xFid);
-                sql.append("time),'年第',QUARTER (time),'季度')");
+                sql.append("),'年第',QUARTER (time),'季度')");
                 //月
             } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
                 sql.append("DATE_FORMAT(");
