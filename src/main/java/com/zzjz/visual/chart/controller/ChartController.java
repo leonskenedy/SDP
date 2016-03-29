@@ -84,15 +84,19 @@ public class ChartController {
             JSONObject filterItem = filter_list.getJSONObject(i);
 
             String adv_type = filterItem.getString("adv_type");
+            String fid = filterItem.getString("fid");
             ////range_type 0 不包含  1包含
             String range_type = filterItem.getString("range_type");
             String data_type = filterItem.getString("data_type");
             if (Contants.DATA_TYPE_DATE.equals(data_type)) {//日期类型
-
+                JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                for (int j = 0; j < rangeJsonArr.size(); j++) {
+                    service.queryToolbarFilter(rangeJsonArr.getString(j),fid);
+                }
             } else if (Contants.DATA_TYPE_NUMBER.equals(data_type)) {//数字类型
                 if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {//条件筛选
                     filterSql.append(" (");
-                    String fid = filterItem.getString("fid");
+
                     JSONArray rangeJsonArr = filterItem.getJSONArray("range");
                     for (int j = 0; j < rangeJsonArr.size(); j++) {
                         String rangeStr = rangeJsonArr.getString(j);
@@ -134,7 +138,7 @@ public class ChartController {
             } else if (Contants.DATA_TYPE_STRING.equals(data_type)) {//字符串类型
                 //精确筛选
                 if (Contants.ADV_TYPE_EXACT.equals(adv_type)) {
-                    filterSql.append(filterItem.getString("fid")).append(" ");
+                    filterSql.append(fid).append(" ");
                     //全部包含
                     if (Contants.RANGE_TYPE_IN.equals(range_type)) {
                         filterSql.append(Contants.RANGE_TYPE_IN);
@@ -151,7 +155,6 @@ public class ChartController {
                     //条件筛选
                 } else if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {
                     filterSql.append(" (");
-                    String fid = filterItem.getString("fid");
                     JSONArray rangeJsonArr = filterItem.getJSONArray("range");
                     for (int j = 0; j < rangeJsonArr.size(); j++) {
                         String rangeStr = rangeJsonArr.getString(j);
@@ -283,7 +286,7 @@ public class ChartController {
                     //SUM,AVG,COUNT,MAX,MIN
                     aggregator = aggregator + "(" + yFid + ")";
                 }
-                aggregatorList.add(aggregator);
+                aggregatorList.add(aggregator + " AS '" + k + "'");
 
 
                 if (sort.getString("uniq_id").equals(yItem.getString("uniq_id"))) {
@@ -294,7 +297,6 @@ public class ChartController {
                         sortFid = aggregator + " DESC";
                     }
                 }
-
             }
 
 
@@ -337,10 +339,9 @@ public class ChartController {
                             coordStart.put("coord", new Object[]{xAxis.get(0), value});
                             //终点
                             JSONObject coordStop = new JSONObject();
-                            coordStop.put("coord", new Object[]{xAxis.get(xAxis .size()-1), value});
+                            coordStop.put("coord", new Object[]{xAxis.get(xAxis.size() - 1), value});
                             coordArray.add(coordStart);
                             coordArray.add(coordStop);
-
                             bar.markLine().data(coordArray);
                             //计算值辅助线  最大值 最小值 平均值
                         } else if (Contants.GUIDE_LINE_TYPE_CALCULATE.equals(value_type)) {
@@ -377,7 +378,7 @@ public class ChartController {
     /**
      * @param chartId
      * @param type       granularity_type 自定义日期粒度类型
-     * @param type       adv_date 日期筛选器
+     * @param type       adv_date_type 日期筛选器
      * @param jsonString
      * @return
      */
@@ -387,10 +388,10 @@ public class ChartController {
         JSONObject respJson = new JSONObject();
         respJson.put("flag", "0");
         respJson.put("msg", "success");
-        if(StringUtils.isNotBlank(optId)){//更新设置
+        if (StringUtils.isNotBlank(optId)) {//更新设置
             service.updaToolbar(chartId, optId, type, jsonString);
             respJson.put("optId", optId);
-        }else{//新增设置
+        } else {//新增设置
             respJson.put("optId", service.saveToolbar(chartId, type, jsonString));
         }
         return respJson;

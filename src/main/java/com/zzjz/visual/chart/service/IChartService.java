@@ -80,6 +80,14 @@ public interface IChartService extends CommonService {
     JSONObject queryToolbarGranularity(String chartId, String granularity_name);
 
     /**
+     * 筛选器ID
+     *
+     * @param filterId 筛选器ID
+     * @param fid
+     */
+    JSONObject queryToolbarFilter(String filterId, String fid);
+
+    /**
      * 更新工具栏
      * @param chartId 图表ID
      * @param optId 工具栏ID

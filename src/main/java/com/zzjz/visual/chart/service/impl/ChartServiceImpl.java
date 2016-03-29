@@ -192,15 +192,15 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 //                    list.set(1, item.subList(0, numValue));
                     if (numValue.intValue() > 0) {
                         sql.append(" LIMIT ").append(numValue.intValue());
-                    }else{
+                    } else {
                         sql.append(" LIMIT 1");
                     }
                 } else if (top.getIntValue("reversed") == 1) {//后
 //                    list.set(1, item.subList(numValue, list.size() - 1));
                     long num = Long.parseLong(count + "") - numValue.intValue();
-                    if (num < 0&&num<count) {
+                    if (num < 0 && num < count) {
                         sql.append(" LIMIT ").append(num).append(",").append(count);
-                    }else{
+                    } else {
                         sql.append(" LIMIT ").append(count - 1).append(",").append(count);
                     }
 
@@ -272,6 +272,62 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
                 }
             }
         }
+        return null;
+    }
+
+    @Override
+    public JSONObject queryToolbarFilter(String filterId, String fid) {
+        //查询筛选器sql
+        String toolbarSql = "SELECT adv_date_type FROM toolbar WHERE id=?";
+        List<List<String>> list = getArrayList(toolbarSql, filterId);
+        //拼装筛选语句
+        StringBuffer sql = new StringBuffer();
+        JSONObject adv_date_type = (JSONObject) JSONObject.parse(list.get(0).get(0));
+        String type = adv_date_type.getString("type");//指定筛选器使用的筛选类型
+        if ("fixed".equals(type)) {//固定时长
+            JSONObject fixed = adv_date_type.getJSONObject("fixed");
+            String time;
+
+            //时间单位 day week month quarter year
+            String granularity = fixed.getString("granularity");
+            //截止时间数值
+            JSONObject end = fixed.getJSONObject("end");
+            //截止时间类型 0 当日/当月/本周。。。 1 昨天/上月/上周  2 前N日/N月/N周 3 后N日/N月/N周
+            String endType = end.getString("type");
+            //查询开始时间及结束时间
+            String startTime, endTime;
+            int num = 0;//默认为当前
+            if ("1".equals(endType)) {
+                num = -1;
+            } else if ("2".equals(endType)) {
+                num = -end.getInteger("value");
+            } else if ("3".equals(endType)) {
+                num = end.getInteger("value");
+            }
+//            if ("day".equals(granularity)) {
+//                endTime = TimeUtils.addDayStartTime(num);
+//                startTime =
+//            } else if ("week".equals(granularity)) {
+//                endTime = TimeUtils.addWeekStartTime(num);
+//            } else if ("month".equals(granularity)) {
+//                endTime = TimeUtils.addMonthStartTime(num);
+//            } else if ("quarter".equals(granularity)) {
+//                endTime = TimeUtils.addQuarterStartTime(num);
+//            } else if ("year".equals(granularity)) {
+//                endTime = TimeUtils.addYearStartTime(num);
+//            }
+
+            sql.append(fid).append(">=");
+            String start = fixed.getString("start");//最近时间数值
+
+        } else if ("relative".equals(type)) {//相对时长
+
+        } else if ("accurate".equals(type)) {//精确日期
+
+        } else if ("expression".equals(type)) {//表达式
+
+        }
+
         return null;
     }
 
