@@ -288,8 +288,8 @@ public class GenericBaseCommonDao<T, PK extends Serializable> implements IGeneri
     /**
      * 使用指定的检索标准检索数据并分页返回数据For JDBC-采用预处理方式
      */
-    public Long getCountForJdbcParam(String sql, Object[] objs) {
-        return this.jdbcTemplate.queryForLong(sql, objs);
+    public Long getCountForJdbcParam(String sql, Object... objs) {
+        return this.jdbcTemplate.queryForObject(sql, objs,Long.class);
     }
 
     public List<Map<String, Object>> findForJdbc(String sql, Object... objs) {
