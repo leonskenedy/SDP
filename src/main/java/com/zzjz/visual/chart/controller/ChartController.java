@@ -331,7 +331,8 @@ public class ChartController {
                             JSONArray coordArray = new JSONArray();
                             //起点
                             JSONObject coordStart = new JSONObject();
-                            coordStart.put("name", name);
+                            coordStart.put("name", value);
+                            coordStart.put("realName", name);
                             //x,y轴
                             coordStart.put("coord", new Object[]{xAxis.get(0), value});
                             //终点

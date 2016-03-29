@@ -59,33 +59,73 @@ function formatNumber(num, cent, isThousand) {
         return (((sign) ? '' : '-') + num + '.' + cents);
     }
 }
+function newline(option, number, axis) {
+    option[axis]['axisLabel'] = {
+        interval: 0,
+        formatter: function (params) {
+            var newParamsName = "";
+            var paramsNameNumber = params.length;
+            var provideNumber = number;
+            var rowNumber = Math.ceil(paramsNameNumber / provideNumber);
+            if (paramsNameNumber > provideNumber) {
+                for (var p = 0; p < rowNumber; p++) {
+                    var tempStr = "";
+                    var start = p * provideNumber;
+                    var end = start + provideNumber;
+                    if (p == rowNumber - 1) {
+                        tempStr = params.substring(start, paramsNameNumber);
+                    } else {
+                        tempStr = params.substring(start, end) + "\n";
+                    }
+                    newParamsName += tempStr;
+                }
+            } else {
+                newParamsName = params;
+            }
+            return newParamsName
+        }
+    }
+    return option;
+}
 /**
  * 格式化tooltip
  * @param yAxis
  */
 function tooltipFormatter(params, yAxis) {
+    var res;
     console.log(params)
-    var res ='<span style="color: black">'+ params[0].name+'</span>';
-    yAxis = eval(yAxis);
-    $.each(yAxis, function (index) {
-        res += '<br/><span style="font-weight:bold;color: ' + params[index].color+'">' + params[index].seriesName + ' : ';
-        var formatter = this.formatter;
-        if (formatter.check == "num") {//数值
-            var num = formatter.num;
-            var digit = num.digit;//精度
-            if (num.millesimal) {//使用千分位分隔符
-                res += formatNumber(params[index].value, digit, 1);
-            } else {
-                res += formatNumber(params[index].value, digit, 0);
-            }
+    if (params instanceof Array) {//柱子提示
+        res = '<span style="color: black">' + params[0].name + '</span>';
+        yAxis = eval(yAxis);
+        $.each(yAxis, function (index) {
+            res += '<br/><span style="font-weight:bold;color: ' + params[index].color + '">' + params[index].seriesName + ' : ';
+            var formatter = this.formatter;
+            if (formatter.check == "num") {//数值
+                var num = formatter.num;
+                var digit = num.digit;//精度
+                if (num.millesimal) {//使用千分位分隔符
+                    res += formatNumber(params[index].value, digit, 1);
+                } else {
+                    res += formatNumber(params[index].value, digit, 0);
+                }
 
-        } else if (formatter.check == "percent") {
-            var percent = formatter.percent;
-            var digit = percent.digit;
-            res += formatNumber(params[index].value, digit, 2);
+            } else if (formatter.check == "percent") {
+                var percent = formatter.percent;
+                var digit = percent.digit;
+                res += formatNumber(params[index].value, digit, 2);
+            }
+            res += "</span>";
+        });
+    } else {//辅助线提示
+        res = '<span style="color: black">';
+        if (params.data  instanceof Array) {
+            res +=  params.data[0]['realName'];//固定值辅助线名称
+        } else {
+            res += params["name"];//其余辅助线名称
         }
-        res+="</span>";
-    });
+        res += '</span>';
+    }
+
 
     return res;
 }

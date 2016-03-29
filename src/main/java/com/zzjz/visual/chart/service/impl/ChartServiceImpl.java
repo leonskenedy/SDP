@@ -176,23 +176,39 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             sql.append(sortFid);
         }
 
-        List<List<String>> list = getArrayList(sql.toString());
+
         //是否勾选维度显示条目数
-        if (top.getBoolean("enabled") && !list.isEmpty()) {
-            List<String> item = list.get(1);
+        if (top.getBoolean("enabled")) {
             String topType = top.getString("type");
-            int numValue = top.getIntValue("value");
+            Double numValue = top.getDoubleValue("value");
+            Long count;
             if (numValue > 0) {
+                count = getCountForJdbcParam("SELECT COUNT(*) FROM (" + sql.toString() + ") A");
                 if (topType.equals(Contants.TOP_TYPE_PERCENT)) {
-                    numValue = numValue / 100 * list.size();//百分比条目数
+                    numValue = numValue / 100 * count;//百分比条目数
                 }
                 if (top.getIntValue("reversed") == 0) {//前
-                    list.set(1, item.subList(0, numValue));
+
+//                    list.set(1, item.subList(0, numValue));
+                    if (numValue.intValue() > 0) {
+                        sql.append(" LIMIT ").append(numValue.intValue());
+                    }else{
+                        sql.append(" LIMIT 1");
+                    }
                 } else if (top.getIntValue("reversed") == 1) {//后
-                    list.set(1, item.subList(numValue, list.size() - 1));
+//                    list.set(1, item.subList(numValue, list.size() - 1));
+                    long num = Long.parseLong(count + "") - numValue.intValue();
+                    if (num < 0&&num<count) {
+                        sql.append(" LIMIT ").append(num).append(",").append(count);
+                    }else{
+                        sql.append(" LIMIT ").append(count - 1).append(",").append(count);
+                    }
+
                 }
+
             }
         }
+        List<List<String>> list = getArrayList(sql.toString());
         return list;
     }
 

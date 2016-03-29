@@ -145,7 +145,7 @@ public class CommonServiceImpl implements CommonService {
     }
 
 
-    public Long getCountForJdbcParam(String sql, Object[] objs) {
+    public Long getCountForJdbcParam(String sql, Object... objs) {
         return genericBaseCommonDao.getCountForJdbcParam(sql, objs);
     }
 
