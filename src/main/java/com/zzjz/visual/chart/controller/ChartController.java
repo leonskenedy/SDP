@@ -195,7 +195,7 @@ public class ChartController {
                     JSONObject guide_line = guideLineArr.getJSONObject(z);
                     String value_type = guide_line.getString("value_type");
                     String uniq_id = guide_line.getString("uniq_id");
-                    if (yuniq_ids.get(z).equals(uniq_id)) {
+                    if (yuniq_ids.get(j).equals(uniq_id)) {
                         String name = guide_line.getString("name");
                         //固定值辅助线 jar包功能不完善，使用json代替
                         if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
