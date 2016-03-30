@@ -82,6 +82,7 @@ public class ChartController {
 
             //设置主标题，主标题居中
             option.title().text(json.getString("name")).x(X.center);
+//            option.title().text(json.getString("name"));
             //Tool.mark 无效
             option.toolbox().show(true).feature(Tool.dataZoom, Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
             option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
@@ -176,7 +177,7 @@ public class ChartController {
             List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql);
             List<String> xAxis = list.get(list.size() - 1);//X轴
             CategoryAxis categoryAxis = new CategoryAxis().data(xAxis.toArray()).splitLine(new SplitLine().show(false));
-            if (list.get(list.size() - 1).size() > 15) {
+            if (xAxis.size() > 15) {
                 categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
             }
             option.xAxis().add(categoryAxis);
@@ -231,7 +232,9 @@ public class ChartController {
                     }
                 }
                 option.series().add(bar);
+                //图例在图表下方 默认在上方
                 option.legend().y(Y.bottom).data().add(barNames.get(j));
+//                option.legend().y(Y.bottom).data().add(barNames.get(j));
             }
 
             options.add(option);
