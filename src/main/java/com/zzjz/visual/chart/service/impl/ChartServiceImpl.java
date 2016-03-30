@@ -5,15 +5,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.zzjz.core.common.service.impl.CommonServiceImpl;
 import com.zzjz.utils.Contants;
+import com.zzjz.utils.DataUtils;
+import com.zzjz.utils.TimeUtils;
 import com.zzjz.visual.chart.service.IChartService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by cnwan on 2016/3/7.
@@ -198,7 +197,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
                 } else if (top.getIntValue("reversed") == 1) {//后
 //                    list.set(1, item.subList(numValue, list.size() - 1));
                     long num = Long.parseLong(count + "") - numValue.intValue();
-                    if (num < 0 && num < count) {
+                    if (num > 0 && num < count) {
                         sql.append(" LIMIT ").append(num).append(",").append(count);
                     } else {
                         sql.append(" LIMIT ").append(count - 1).append(",").append(count);
@@ -275,8 +274,146 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         return null;
     }
 
+
+    @Override
+    public String joinFilterSql(JSONArray filter_list) {
+        StringBuffer filterSql = new StringBuffer(200);
+        for (int i = 0; i < filter_list.size(); i++) {
+
+            if (i != 0) {
+                filterSql.append(" AND ");
+            }
+
+            JSONObject filterItem = filter_list.getJSONObject(i);
+
+            String adv_type = filterItem.getString("adv_type");
+            String fid = filterItem.getString("fid");
+            ////range_type 0 不包含  1包含
+            String range_type = filterItem.getString("range_type");
+            String data_type = filterItem.getString("data_type");
+            if (Contants.DATA_TYPE_DATE.equals(data_type)) {//日期类型
+                JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                for (int j = 0; j < rangeJsonArr.size(); j++) {
+                    queryToolbarFilter(rangeJsonArr.getString(j), fid);
+                }
+            } else if (Contants.DATA_TYPE_NUMBER.equals(data_type)) {//数字类型
+                if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {//条件筛选
+                    filterSql.append(" (");
+
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        String rangeStr = rangeJsonArr.getString(j);
+                        JSONObject rangeJson = JSONObject.parseObject(rangeStr);
+
+                        JSONArray conditions = rangeJson.getJSONArray("conditions");
+                        for (int k = 0; k < conditions.size(); k++) {
+                            if (k != 0) {
+                                filterSql.append(" AND ");
+                            }
+                            filterSql.append(fid);
+
+                            JSONObject condition = conditions.getJSONObject(k);
+                            int calc_type = condition.getIntValue("calc_type");
+                            String value = condition.getString("value");
+                            if (calc_type == 0) {//等于
+                                filterSql.append("=").append(value);
+                            } else if (calc_type == 1) {//不等于
+                                filterSql.append("!=").append(value);
+                            } else if (calc_type == 2) {//大于
+                                filterSql.append(">").append(value);
+                            } else if (calc_type == 3) {//小于
+                                filterSql.append("<").append(value);
+                            } else if (calc_type == 4) {//大于等于
+                                filterSql.append(">=").append(value);
+                            } else if (calc_type == 5) {//小于等于
+                                filterSql.append("<=").append(value);
+                            }
+                        }
+
+                    }
+                    filterSql.append(")");
+                } else if (Contants.ADV_TYPE_EXPRESSION.equals(adv_type)) {//表达式筛选
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        filterSql.append(" (").append(rangeJsonArr.getString(j)).append(") ");
+                    }
+                }
+            } else if (Contants.DATA_TYPE_STRING.equals(data_type)) {//字符串类型
+                //精确筛选
+                if (Contants.ADV_TYPE_EXACT.equals(adv_type)) {
+                    filterSql.append(fid).append(" ");
+                    //全部包含
+                    if (Contants.RANGE_TYPE_IN.equals(range_type)) {
+                        filterSql.append(Contants.RANGE_TYPE_IN);
+                        //全部不包含
+                    } else if (Contants.RANGE_TYPE_NOT_IN.equals(range_type)) {
+                        filterSql.append(Contants.RANGE_TYPE_NOT_IN);
+                    }
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        String rangeStr = rangeJsonArr.getString(j);
+                        String[] rangeArr = rangeStr.substring(1, rangeStr.length() - 1).split(",");
+                        filterSql.append(" (").append(StringUtils.join(rangeArr, ",")).append(") ");
+                    }
+                    //条件筛选
+                } else if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {
+                    filterSql.append(" (");
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        String rangeStr = rangeJsonArr.getString(j);
+                        JSONObject rangeJson = JSONObject.parseObject(rangeStr);
+                        //1 满足任一条件  2满足所有条件
+                        String condition_type = rangeJson.getString("condition_type");
+                        JSONArray conditions = rangeJson.getJSONArray("conditions");
+                        for (int k = 0; k < conditions.size(); k++) {
+                            if (k != 0) {
+                                if ("1".equals(condition_type)) {//满足任一条件
+                                    filterSql.append(" OR ");
+                                } else if ("2".equals(condition_type)) {//满足所有条件
+                                    filterSql.append(" AND ");
+                                }
+                            }
+                            filterSql.append(fid);
+
+                            JSONObject condition = conditions.getJSONObject(k);
+                            int calc_type = condition.getIntValue("calc_type");
+                            String value = condition.getString("value");
+                            if (calc_type == 0) {//等于
+                                filterSql.append("='").append(value).append("'");
+                            } else if (calc_type == 1) {//不等于
+                                filterSql.append("!='").append(value).append("'");
+                            } else if (calc_type == 6) {//包含
+                                filterSql.append(" LIKE '%").append(value).append("%'");
+                            } else if (calc_type == 7) {//不包含
+                                filterSql.append(" NOT LIKE '%").append(value).append("%'");
+                            } else if (calc_type == 10) {//开头包含
+                                filterSql.append(" NOT LIKE '").append(value).append("%'");
+                            } else if (calc_type == 11) {//结尾包含
+                                filterSql.append(" NOT LIKE '%").append(value).append("'");
+                            }
+
+                        }
+
+                    }
+                    filterSql.append(")");
+                    //表达式筛选
+                } else if (Contants.ADV_TYPE_EXPRESSION.equals(adv_type)) {
+                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
+                    for (int j = 0; j < rangeJsonArr.size(); j++) {
+                        filterSql.append(" (").append(rangeJsonArr.getString(j)).append(") ");
+                    }
+                }
+            }
+
+
+        }
+        return null;
+    }
+
     @Override
     public JSONObject queryToolbarFilter(String filterId, String fid) {
+
+
         //查询筛选器sql
         String toolbarSql = "SELECT adv_date_type FROM toolbar WHERE id=?";
         List<List<String>> list = getArrayList(toolbarSql, filterId);
@@ -286,7 +423,6 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         String type = adv_date_type.getString("type");//指定筛选器使用的筛选类型
         if ("fixed".equals(type)) {//固定时长
             JSONObject fixed = adv_date_type.getJSONObject("fixed");
-            String time;
 
             //时间单位 day week month quarter year
             String granularity = fixed.getString("granularity");
@@ -294,34 +430,112 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             JSONObject end = fixed.getJSONObject("end");
             //截止时间类型 0 当日/当月/本周。。。 1 昨天/上月/上周  2 前N日/N月/N周 3 后N日/N月/N周
             String endType = end.getString("type");
+            //最近时间数值
+            int startNum = fixed.getIntValue("start");
+            //截止时间数值默认为当前
+            int endNum = 0;
             //查询开始时间及结束时间
-            String startTime, endTime;
-            int num = 0;//默认为当前
-            if ("1".equals(endType)) {
-                num = -1;
-            } else if ("2".equals(endType)) {
-                num = -end.getInteger("value");
-            } else if ("3".equals(endType)) {
-                num = end.getInteger("value");
-            }
-//            if ("day".equals(granularity)) {
-//                endTime = TimeUtils.addDayStartTime(num);
-//                startTime =
-//            } else if ("week".equals(granularity)) {
-//                endTime = TimeUtils.addWeekStartTime(num);
-//            } else if ("month".equals(granularity)) {
-//                endTime = TimeUtils.addMonthStartTime(num);
-//            } else if ("quarter".equals(granularity)) {
-//                endTime = TimeUtils.addQuarterStartTime(num);
-//            } else if ("year".equals(granularity)) {
-//                endTime = TimeUtils.addYearStartTime(num);
-//            }
+            Date startTime = null;
+            Date endTime = null;
 
-            sql.append(fid).append(">=");
-            String start = fixed.getString("start");//最近时间数值
+            if ("1".equals(endType)) {
+                endNum = -1;
+            } else if ("2".equals(endType)) {
+                endNum = -end.getInteger("value");
+            } else if ("3".equals(endType)) {
+                endNum = end.getInteger("value");
+            }
+
+            if (Contants.GRANULARITY_TYPE_DAY.equals(granularity)) {
+
+                endTime = TimeUtils.addDayStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addDayStartTime(endTime, -startNum);
+
+            } else if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
+
+                endTime = TimeUtils.addWeekStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addWeekStartTime(endTime, -startNum);
+
+            } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
+
+                endTime = TimeUtils.addMonthStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addMonthStartTime(endTime, -startNum);
+
+            } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
+
+                endTime = TimeUtils.addQuarterStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addQuarterStartTime(endTime, -startNum);
+
+            } else if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
+
+                endTime = TimeUtils.addYearStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addYearStartTime(endTime, -startNum);
+
+            }
+
+            sql.append(fid);
+            sql.append(">='");
+            sql.append(DataUtils.formatDate(startTime, DataUtils.datetimeFormat));
+            sql.append("' AND ");
+            sql.append(fid);
+            sql.append("<'");
+            sql.append(DataUtils.formatDate(endTime, DataUtils.datetimeFormat));
+            sql.append("'");
 
         } else if ("relative".equals(type)) {//相对时长
+          /*  JSONObject relative = adv_date_type.getJSONObject("relative");
 
+            //时间单位  week month quarter year
+            String granularity = relative.getString("granularity");
+            //查询开始时间及结束时间
+            Date startTime = null;
+            Date endTime = null;
+
+            "relative": {
+                "week": {
+                    "start": "0",
+                            "end": "1"
+                },
+                "quarter": {
+                    "start": "2"
+                },
+                "month": {
+                    "start": "2"
+                },
+                "granularity": "week",
+                        "year": {
+                    "start": "2"
+                }
+            }
+            if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
+                JSONObject week = relative.getJSONObject(Contants.GRANULARITY_TYPE_WEEK);
+                String start = week.getString("start");
+                if("0".equals(start)){//当天/当月/本周/本季度/本年
+
+                }else if("1".equals(start)){//上一个节点
+
+                }else if("2".equals(start)){//下一个节点
+
+                }
+                endTime = TimeUtils.addWeekStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addWeekStartTime(endTime, -startNum);
+
+            } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
+
+                endTime = TimeUtils.addMonthStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addMonthStartTime(endTime, -startNum);
+
+            } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
+
+                endTime = TimeUtils.addQuarterStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addQuarterStartTime(endTime, -startNum);
+
+            } else if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
+
+                endTime = TimeUtils.addYearStartTime(new Date(), endNum + 1);
+                startTime = TimeUtils.addYearStartTime(endTime, -startNum);
+
+            }*/
         } else if ("accurate".equals(type)) {//精确日期
 
         } else if ("expression".equals(type)) {//表达式

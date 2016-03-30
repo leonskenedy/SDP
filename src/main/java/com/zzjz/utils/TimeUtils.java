@@ -46,7 +46,7 @@ public class TimeUtils {
         else if (currentMonth >= 10 && currentMonth <= 12)
             c.set(Calendar.MONTH, 9);
         c.set(Calendar.DATE, 1);
-        c.set(Calendar.MONTH, date.getMonth() - (n * 3));
+        c.set(Calendar.MONTH, c.get(Calendar.MONTH) + (n * 3));
         c.set(Calendar.HOUR, 0);
         c.set(Calendar.MINUTE, 0);
         c.set(Calendar.SECOND, 0);
@@ -96,7 +96,7 @@ public class TimeUtils {
     public static Date addYearStartTime(Date date, int n) {
         Calendar c = Calendar.getInstance();
         c.setTime(date);
-        c.set(Calendar.YEAR, c.get(Calendar.YEAR)+n);
+        c.set(Calendar.YEAR, c.get(Calendar.YEAR) + n);
         c.set(Calendar.MONTH, 0);
         c.set(Calendar.DAY_OF_MONTH, 1);
         c.set(Calendar.HOUR_OF_DAY, 0);
@@ -106,11 +106,19 @@ public class TimeUtils {
     }
 
     public static void main(String[] args) {
+        Date startTime, endTime;
+        int startNum = 9;//最近时间数值
+        int endNum = 2;//默认为当前
+        endTime = TimeUtils.addYearStartTime(new Date(), (-endNum)+1);
+        startTime = TimeUtils.addYearStartTime(endTime, -(startNum));
+
         SimpleDateFormat a = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-        System.out.println("TimeUtils.java-->104:" + a.format(addDayStartTime(new Date(), 1)));
-        System.out.println("TimeUtils.java-->104:" + a.format(addMonthStartTime(new Date(), 1)));
-        System.out.println("TimeUtils.java-->104:" + a.format(addQuarterStartTime(new Date(), 1)));
-        System.out.println("TimeUtils.java-->104:" + a.format(addWeekStartTime(new Date(), 1)));
-        System.out.println("TimeUtils.java-->104:" + a.format(addYearStartTime(new Date(), 1)));
+        System.out.println("TimeUtils.java-->116:"+a.format(startTime));
+        System.out.println("TimeUtils.java-->116:"+a.format(endTime));
+//        System.out.println("TimeUtils.java-->天:" + a.format(addDayStartTime(new Date(), -1)));
+//        System.out.println("TimeUtils.java-->月:" + a.format(addMonthStartTime(new Date(), -1)));
+//        System.out.println("TimeUtils.java-->季度:" + a.format(addQuarterStartTime(new Date(), -1)));
+//        System.out.println("TimeUtils.java-->周:" + a.format(addWeekStartTime(new Date(), -1)));
+//        System.out.println("TimeUtils.java-->年:" + a.format(addYearStartTime(new Date(), -1)));
     }
 }

@@ -70,146 +70,19 @@ public class ChartController {
         JSONArray level = meta.getJSONArray("level");
         //筛选器
         JSONArray filter_list = meta.getJSONArray("filter_list");
+        String filterSql = service.joinFilterSql(filter_list);
         //图内筛选器
         JSONObject filter_list_inner = meta.getJSONObject("filter_list_inner");
 
         List<GsonOption> options = Lists.newArrayList();
-        StringBuffer filterSql = new StringBuffer(200);
-        for (int i = 0; i < filter_list.size(); i++) {
 
-            if (i != 0) {
-                filterSql.append(" AND ");
-            }
-
-            JSONObject filterItem = filter_list.getJSONObject(i);
-
-            String adv_type = filterItem.getString("adv_type");
-            String fid = filterItem.getString("fid");
-            ////range_type 0 不包含  1包含
-            String range_type = filterItem.getString("range_type");
-            String data_type = filterItem.getString("data_type");
-            if (Contants.DATA_TYPE_DATE.equals(data_type)) {//日期类型
-                JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                for (int j = 0; j < rangeJsonArr.size(); j++) {
-                    service.queryToolbarFilter(rangeJsonArr.getString(j),fid);
-                }
-            } else if (Contants.DATA_TYPE_NUMBER.equals(data_type)) {//数字类型
-                if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {//条件筛选
-                    filterSql.append(" (");
-
-                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                    for (int j = 0; j < rangeJsonArr.size(); j++) {
-                        String rangeStr = rangeJsonArr.getString(j);
-                        JSONObject rangeJson = JSONObject.parseObject(rangeStr);
-
-                        JSONArray conditions = rangeJson.getJSONArray("conditions");
-                        for (int k = 0; k < conditions.size(); k++) {
-                            if (k != 0) {
-                                filterSql.append(" AND ");
-                            }
-                            filterSql.append(fid);
-
-                            JSONObject condition = conditions.getJSONObject(k);
-                            int calc_type = condition.getIntValue("calc_type");
-                            String value = condition.getString("value");
-                            if (calc_type == 0) {//等于
-                                filterSql.append("=").append(value);
-                            } else if (calc_type == 1) {//不等于
-                                filterSql.append("!=").append(value);
-                            } else if (calc_type == 2) {//大于
-                                filterSql.append(">").append(value);
-                            } else if (calc_type == 3) {//小于
-                                filterSql.append("<").append(value);
-                            } else if (calc_type == 4) {//大于等于
-                                filterSql.append(">=").append(value);
-                            } else if (calc_type == 5) {//小于等于
-                                filterSql.append("<=").append(value);
-                            }
-                        }
-
-                    }
-                    filterSql.append(")");
-                } else if (Contants.ADV_TYPE_EXPRESSION.equals(adv_type)) {//表达式筛选
-                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                    for (int j = 0; j < rangeJsonArr.size(); j++) {
-                        filterSql.append(" (").append(rangeJsonArr.getString(j)).append(") ");
-                    }
-                }
-            } else if (Contants.DATA_TYPE_STRING.equals(data_type)) {//字符串类型
-                //精确筛选
-                if (Contants.ADV_TYPE_EXACT.equals(adv_type)) {
-                    filterSql.append(fid).append(" ");
-                    //全部包含
-                    if (Contants.RANGE_TYPE_IN.equals(range_type)) {
-                        filterSql.append(Contants.RANGE_TYPE_IN);
-                        //全部不包含
-                    } else if (Contants.RANGE_TYPE_NOT_IN.equals(range_type)) {
-                        filterSql.append(Contants.RANGE_TYPE_NOT_IN);
-                    }
-                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                    for (int j = 0; j < rangeJsonArr.size(); j++) {
-                        String rangeStr = rangeJsonArr.getString(j);
-                        String[] rangeArr = rangeStr.substring(1, rangeStr.length() - 1).split(",");
-                        filterSql.append(" (").append(StringUtils.join(rangeArr, ",")).append(") ");
-                    }
-                    //条件筛选
-                } else if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {
-                    filterSql.append(" (");
-                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                    for (int j = 0; j < rangeJsonArr.size(); j++) {
-                        String rangeStr = rangeJsonArr.getString(j);
-                        JSONObject rangeJson = JSONObject.parseObject(rangeStr);
-                        //1 满足任一条件  2满足所有条件
-                        String condition_type = rangeJson.getString("condition_type");
-                        JSONArray conditions = rangeJson.getJSONArray("conditions");
-                        for (int k = 0; k < conditions.size(); k++) {
-                            if (k != 0) {
-                                if ("1".equals(condition_type)) {//满足任一条件
-                                    filterSql.append(" OR ");
-                                } else if ("2".equals(condition_type)) {//满足所有条件
-                                    filterSql.append(" AND ");
-                                }
-                            }
-                            filterSql.append(fid);
-
-                            JSONObject condition = conditions.getJSONObject(k);
-                            int calc_type = condition.getIntValue("calc_type");
-                            String value = condition.getString("value");
-                            if (calc_type == 0) {//等于
-                                filterSql.append("='").append(value).append("'");
-                            } else if (calc_type == 1) {//不等于
-                                filterSql.append("!='").append(value).append("'");
-                            } else if (calc_type == 6) {//包含
-                                filterSql.append(" LIKE '%").append(value).append("%'");
-                            } else if (calc_type == 7) {//不包含
-                                filterSql.append(" NOT LIKE '%").append(value).append("%'");
-                            } else if (calc_type == 10) {//开头包含
-                                filterSql.append(" NOT LIKE '").append(value).append("%'");
-                            } else if (calc_type == 11) {//结尾包含
-                                filterSql.append(" NOT LIKE '%").append(value).append("'");
-                            }
-
-                        }
-
-                    }
-                    filterSql.append(")");
-                    //表达式筛选
-                } else if (Contants.ADV_TYPE_EXPRESSION.equals(adv_type)) {
-                    JSONArray rangeJsonArr = filterItem.getJSONArray("range");
-                    for (int j = 0; j < rangeJsonArr.size(); j++) {
-                        filterSql.append(" (").append(rangeJsonArr.getString(j)).append(") ");
-                    }
-                }
-            }
-
-
-        }
         //循环层级对应的xy轴信息
         for (int i = 0; i < level.size(); i++) {
             GsonOption option = new EnhancedOption();
 
             //设置主标题，主标题居中
             option.title().text(json.getString("name")).x(X.center);
+//            option.title().text(json.getString("name"));
             //Tool.mark 无效
             option.toolbox().show(true).feature(Tool.dataZoom, Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
             option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
@@ -260,7 +133,7 @@ public class ChartController {
             List<String> aggregatorList = new ArrayList<>();
             List<String> barNames = new ArrayList<>();
             List<JSONObject> advance_aggregators = new ArrayList<>();
-            List<String> yIds = new ArrayList<>();
+            List<String> yuniq_ids = new ArrayList<>();
             String sortFid = null;
             //循环Y轴
             for (int k = 0; k < y.size(); k++) {
@@ -271,7 +144,7 @@ public class ChartController {
                 String aggregator = yItem.getString("aggregator");
                 //高级计算 cancel:取消percentage:百分比
                 advance_aggregators.add(yItem.getJSONObject("advance_aggregator"));
-                yIds.add(yFid);
+                yuniq_ids.add(yItem.getString("uniq_id"));
                 //去重计数
                 if (Contants.AGG_TYPE_COUNT_DISTINCT.equals(aggregator)) {
                     aggregator = Contants.AGG_TYPE_COUNT + "(DISTINCT " + yFid + ")";
@@ -301,16 +174,16 @@ public class ChartController {
 
 
             String aggregator = StringUtils.join(aggregatorList, ",");
-            List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql.toString());
+            List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql);
             List<String> xAxis = list.get(list.size() - 1);//X轴
             CategoryAxis categoryAxis = new CategoryAxis().data(xAxis.toArray()).splitLine(new SplitLine().show(false));
-            if (list.get(list.size() - 1).size() > 15) {
+            if (xAxis.size() > 15) {
                 categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
             }
             option.xAxis().add(categoryAxis);
             for (int j = 0; j < barNames.size(); j++) {
                 //设置Y轴数据
-                Bar bar = new Bar(barNames.get(i));
+                Bar bar = new Bar(barNames.get(j));
                 JSONObject advance_aggregator = advance_aggregators.get(i);
                 //高级计算百分比
                 if (advance_aggregator != null && Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
@@ -322,15 +195,14 @@ public class ChartController {
                 for (int z = 0; z < guideLineArr.size(); z++) {
                     JSONObject guide_line = guideLineArr.getJSONObject(z);
                     String value_type = guide_line.getString("value_type");
-                    String fid = guide_line.getString("fid");
-                    if (yIds.get(i).equals(fid)) {
+                    String uniq_id = guide_line.getString("uniq_id");
+                    if (yuniq_ids.get(j).equals(uniq_id)) {
                         String name = guide_line.getString("name");
                         //固定值辅助线 jar包功能不完善，使用json代替
                         if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
-//                                PointData pointData= new PointData(guide_line.getString("name"));
-//                                bar.markLine().data(lineData);
                             double value = guide_line.getDouble("value");
                             JSONArray coordArray = new JSONArray();
+
                             //起点
                             JSONObject coordStart = new JSONObject();
                             coordStart.put("name", value);
@@ -360,7 +232,9 @@ public class ChartController {
                     }
                 }
                 option.series().add(bar);
-                option.legend().y(Y.bottom).data().add(barNames.get(i));
+                //图例在图表下方 默认在上方
+                option.legend().y(Y.bottom).data().add(barNames.get(j));
+//                option.legend().y(Y.bottom).data().add(barNames.get(j));
             }
 
             options.add(option);
