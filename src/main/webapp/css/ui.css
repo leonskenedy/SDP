@@ -38,9 +38,7 @@
     padding: 5px 0px 5px 0px;
     position: relative;
 }
-.zzjz-axis-over{
-    background-color: rgba(120, 210, 255, 0.47);
-}
+
 .zzjz-axis-leader{
     margin-left: 5px;
 }
@@ -248,4 +246,14 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
 }
 #chart_number_limit_div .textbox{
     margin: 0px 3px 0px 0px;
+}
+.zzjz-echart-div{
+    position: relative;
+}
+.zzjz-data-filter{
+    min-height: 200px;
+    background-color: rgba(180, 199, 185, 0.18);
+}
+.zzjz-axis-over{
+    background-color: rgba(120, 210, 255, 0.47);
 }

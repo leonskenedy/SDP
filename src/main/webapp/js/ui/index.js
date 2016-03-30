@@ -331,25 +331,11 @@ $(document).ready(function(){
     $('#mm').menu("appendItem",{
         parent: $("#mm_order")[0],
         name:"desc_seq",
-        text:"将序"
+        text:"降序"
     });
     initXAxisMenu();
     resetEChartDiv();
-    $(".zzjz-echart-div").droppable({
-        accept: ".zzjz-axis-item",
-        onDragEnter:function(e,source){
-            $(source).draggable('proxy').css("color", "red").find(".l-btn-text").css('text-decoration','line-through');
-        },
-        onDragLeave:function(e,source){
-            $(source).draggable('proxy').css("color", "").find(".l-btn-text").css('text-decoration','none');
-        },onDrop:function(e,source){
-            $(source).remove();
-            setTimeout(function(){
-                resetEChartDiv();
-                gatherData();
-            }, 1000)
-        }
-    });
+
 
     $("#value_format_dialog").dialog({
         buttons: [{
@@ -516,6 +502,7 @@ $(document).ready(function(){
                                 }
                                 obj.value *= 1;
                                 obj.fid = $(".zzjz-yaxis-div .zzjz-axis-item").first().attr("column_en");
+                                obj.uniq_id = $(".zzjz-yaxis-div .zzjz-axis-item").first().attr("id")
                             }
                             results.push(obj);
                         }
@@ -603,11 +590,62 @@ $(document).ready(function(){
             $("#limit_num_operate_div").hide()
             chart.meta.level[0].top.enabled = false;
         }
-    })
+    });
+    
+    
+    $(".zzjz-echart-div").append(
+        $("<div class='zzjz-echart-div-left' style='position: absolute;left: 0px;top:0px;bottom: 0px;width: 200px;border-right: 1px solid #95B8E7;'></div>")
+    ).append(
+        $("<div class='zzjz-echart-div-right' style='position: absolute;left: 200px;top:0px;bottom: 0px;right: 0px;'></div>")
+    )
+
+    $(".zzjz-echart-div-left").append(
+        $("<div class='zzjz-data-filter'></div>").append(
+            $("<div class='zzjz-title-div' style='margin: 0;padding: 5px 5px 10px 5px;'></div>").text("筛选器"))
+    );
+
+    $(".zzjz-data-filter").droppable({
+        accept: ".zzjz-column-div",
+        onDragEnter:function(e,source){
+            //$(source).draggable('options').cursor='auto';
+            $(source).draggable('proxy').css('border','1px solid red');
+            $(this).addClass('zzjz-axis-over');
+            debugger;
+        },
+        onDragLeave:function(e,source){
+            //$(source).draggable('options').cursor='not-allowed';
+            $(source).draggable('proxy').css('border','1px solid #ccc');
+            $(this).removeClass('zzjz-axis-over');
+        },
+        onDrop:function(e,source){
+            $(this).removeClass('zzjz-axis-over');
+            $("#data_filter_dialog").dialog("open");
+            alert(222)
+        }
+    });
+    setupDataFilter();
+
+
+
+    $(".zzjz-echart-div-right").droppable({
+        accept: ".zzjz-axis-item",
+        onDragEnter:function(e,source){
+            $(source).draggable('proxy').css("color", "red").find(".l-btn-text").css('text-decoration','line-through');
+        },
+        onDragLeave:function(e,source){
+            $(source).draggable('proxy').css("color", "").find(".l-btn-text").css('text-decoration','none');
+        },onDrop:function(e,source){
+            $(source).remove();
+            setTimeout(function(){
+                resetEChartDiv();
+                gatherData();
+            }, 1000)
+        }
+    });
 });
 
 function resetEChartDiv(){
-    $(".zzjz-echart-div").height($(".zzjz-echart-div").parent().height() - $(".zzjz-axis-div").height() - 2);
+    $(".zzjz-echart-div").height($(".zzjz-echart-div").parent().height() - $(".zzjz-axis-div").height());
 }
 function gatherData(){
     chart.meta.level[0].y = [];
@@ -656,11 +694,11 @@ function gatherData(){
         dataType:"json",
         success:function(data){
             try{
-                echart.dispose($(".zzjz-echart-div")[0]);
+                echart.dispose($(".zzjz-echart-div-right")[0]);
             }catch (e){
 
             }
-            echart = echarts.init($(".zzjz-echart-div")[0]);
+            echart = echarts.init($(".zzjz-echart-div-right")[0]);
             console.log(eval("("+data.option+")"))
             echart.setOption(eval("("+data.option+")"));
         }
