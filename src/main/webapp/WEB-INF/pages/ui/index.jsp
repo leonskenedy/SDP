@@ -11,6 +11,7 @@
     <link type="text/css" rel="stylesheet" href="${ctx}/css/easyui.css">
     <link type="text/css" rel="stylesheet" href="${ctx}/css/icon.css">
     <link type="text/css" rel="stylesheet" href="${ctx}/css/ui.css">
+    <script src="${ctx}/js/ui/dataFilter.js"></script>
     <script src="${ctx}/js/ui/index.js"></script>
     <style>
         #chart_column_panel_center .panel-body{
