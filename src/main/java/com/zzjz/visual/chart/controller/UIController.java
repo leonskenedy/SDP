@@ -25,9 +25,9 @@ public class UIController {
         return "ui/index";
     }
 
-    @RequestMapping(value = "/uniqueData", method = RequestMethod.GET)
+    @RequestMapping(value = "/uniqueData", method = {RequestMethod.GET, RequestMethod.POST})
     @ResponseBody
-    public Object getUniqueData(@RequestParam String columnName){
-        return testService.getUniqueColumnData(columnName);
+    public Object getUniqueData(@RequestParam String columnName, @RequestParam(required = false, defaultValue = "") String keyword){
+        return testService.getUniqueColumnData(columnName, keyword);
     }
 }

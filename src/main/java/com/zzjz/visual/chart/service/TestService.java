@@ -2,6 +2,7 @@ package com.zzjz.visual.chart.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.zzjz.visual.chart.entity.Test;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,19 @@ public class TestService {
         return factory.openSession().createQuery("from Test").list();
     }
 
-    public JSONArray getUniqueColumnData(String columnName){
-        return (JSONArray) JSONArray.toJSON(factory.openSession().createSQLQuery("select distinct " + columnName + " from product")
-                .setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP).list());
+    public JSONArray getUniqueColumnData(String columnName, String keyWord){
+        Session s = null;
+        JSONArray result = new JSONArray();
+        try{
+            s = factory.openSession();
+            result = (JSONArray) JSONArray.toJSON(s.createSQLQuery("select distinct " + columnName + " from product where " + columnName + " like :keyword")
+                    .setString("keyword", "%"+keyWord+"%")
+                    .setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP).list());
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            s.close();
+        }
+        return result;
     }
 }

@@ -619,8 +619,10 @@ $(document).ready(function(){
         },
         onDrop:function(e,source){
             $(this).removeClass('zzjz-axis-over');
-            $("#data_filter_dialog").dialog("open");
-            alert(222)
+            var columnEn = $(source).attr("column_en");
+            var columnType = $(source).attr("column_type");
+            window._filterConfig = {isEdit: false, columnEn: columnEn, columnType: columnType}
+            initFilter(columnEn, columnType);
         }
     });
     setupDataFilter();
