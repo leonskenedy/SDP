@@ -1,5 +1,6 @@
 package com.zzjz.visual.chart.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.zzjz.core.common.service.CommonService;
 
@@ -65,7 +66,8 @@ public interface IChartService extends CommonService {
 
     /**
      * 保存chart工具栏
-     *  @param chartId
+     *
+     * @param chartId
      * @param type       工具栏类型
      * @param jsonString json参数
      */
@@ -75,7 +77,7 @@ public interface IChartService extends CommonService {
      * 保存chart工具栏
      *
      * @param chartId
-     * @param granularity_name    工具栏日期类型自定义名称
+     * @param granularity_name 工具栏日期类型自定义名称
      */
     JSONObject queryToolbarGranularity(String chartId, String granularity_name);
 
@@ -89,10 +91,19 @@ public interface IChartService extends CommonService {
 
     /**
      * 更新工具栏
-     * @param chartId 图表ID
-     * @param optId 工具栏ID
-     * @param type 工具栏类型
+     *
+     * @param chartId    图表ID
+     * @param optId      工具栏ID
+     * @param type       工具栏类型
      * @param jsonString 工具栏详细参数
      */
     void updaToolbar(String chartId, String optId, String type, String jsonString);
+
+    /**
+     * 拼接筛选器sql语句
+     *
+     * @param filterList
+     * @return
+     */
+    String joinFilterSql(JSONArray filterList);
 }

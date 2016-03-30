@@ -21,6 +21,7 @@ public class Contants {
     public static final String DATA_TYPE_DATE = "date";
     public static final String DATA_TYPE_NUMBER = "number";
     public static final String DATA_TYPE_STRING = "string";
+
     /**
      * 统计日期粒度
      */
