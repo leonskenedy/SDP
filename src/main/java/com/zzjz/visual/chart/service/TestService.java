@@ -1,7 +1,6 @@
 package com.zzjz.visual.chart.service;
 
 import com.alibaba.fastjson.JSONArray;
-import com.zzjz.visual.chart.entity.Test;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
