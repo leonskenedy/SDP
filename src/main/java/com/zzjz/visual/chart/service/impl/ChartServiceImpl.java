@@ -60,7 +60,6 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         StringBuffer sql = new StringBuffer("SELECT ");
         sql.append(aggregator).append(",");
         if (granularity_type != null) {
-            //{"week":[{"name":"cc","day_of_week":1}],"month":[{"name":"bb","day":1}],"year":[{"name":"aa","day":1,"month":2}]}
             Integer day_of_week = granularity_type.getInteger("day_of_week");
             Integer month = granularity_type.getInteger("month");
             //自定义年
@@ -154,18 +153,14 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
                 sql.append("DATE_FORMAT(");
                 sql.append(xFid);
                 sql.append(",'%Y年%c月%e日 %H时%i分%S秒')");
-            }
-//        else if(){
-//
-//        }
-            else {//null
+            } else {//null
                 sql.append(xFid);
             }
         }
         sql.append(" AS xAxis FROM ").append(tb_id).append(" ");
 
         if (StringUtils.isNotBlank(filterSql)) {//筛选器sql
-            sql.append(filterSql);
+            sql.append(" WHERE ").append(filterSql);
         }
 
         sql.append(" GROUP BY xAxis ORDER BY ");
@@ -294,7 +289,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             if (Contants.DATA_TYPE_DATE.equals(data_type)) {//日期类型
                 JSONArray rangeJsonArr = filterItem.getJSONArray("range");
                 for (int j = 0; j < rangeJsonArr.size(); j++) {
-                    queryToolbarFilter(rangeJsonArr.getString(j), fid);
+                    filterSql.append(joinTimeSql(rangeJsonArr.getString(j), fid));
                 }
             } else if (Contants.DATA_TYPE_NUMBER.equals(data_type)) {//数字类型
                 if (Contants.ADV_TYPE_CONDITION.equals(adv_type)) {//条件筛选
@@ -343,10 +338,10 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
                 if (Contants.ADV_TYPE_EXACT.equals(adv_type)) {
                     filterSql.append(fid).append(" ");
                     //全部包含
-                    if (Contants.RANGE_TYPE_IN.equals(range_type)) {
+                    if ("1".equals(range_type)) {
                         filterSql.append(Contants.RANGE_TYPE_IN);
                         //全部不包含
-                    } else if (Contants.RANGE_TYPE_NOT_IN.equals(range_type)) {
+                    } else if ("0".equals(range_type)) {
                         filterSql.append(Contants.RANGE_TYPE_NOT_IN);
                     }
                     JSONArray rangeJsonArr = filterItem.getJSONArray("range");
@@ -407,12 +402,11 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
 
         }
-        return null;
+        return filterSql.toString();
     }
 
     @Override
-    public JSONObject queryToolbarFilter(String filterId, String fid) {
-
+    public String joinTimeSql(String filterId, String fid) {
 
         //查询筛选器sql
         String toolbarSql = "SELECT adv_date_type FROM toolbar WHERE id=?";
@@ -483,66 +477,56 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             sql.append("'");
 
         } else if ("relative".equals(type)) {//相对时长
-          /*  JSONObject relative = adv_date_type.getJSONObject("relative");
+            JSONObject relative = adv_date_type.getJSONObject("relative");
 
             //时间单位  week month quarter year
             String granularity = relative.getString("granularity");
-            //查询开始时间及结束时间
-            Date startTime = null;
-            Date endTime = null;
-
-            "relative": {
-                "week": {
-                    "start": "0",
-                            "end": "1"
-                },
-                "quarter": {
-                    "start": "2"
-                },
-                "month": {
-                    "start": "2"
-                },
-                "granularity": "week",
-                        "year": {
-                    "start": "2"
-                }
+            String start = relative.getJSONObject(granularity).getString("start");//开始时期编号
+            String end = relative.getJSONObject(granularity).getString("end");//结束时期编号
+            int startNum = 0;//默认为当月/本周/本季度/本年
+            if ("1".equals(start)) {//上一个节点
+                startNum = -1;
+            } else if ("2".equals(start)) {//下一个节点
+                startNum = 1;
             }
-            if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
-                JSONObject week = relative.getJSONObject(Contants.GRANULARITY_TYPE_WEEK);
-                String start = week.getString("start");
-                if("0".equals(start)){//当天/当月/本周/本季度/本年
+            Date startTime = TimeUtils.addTimeStartTime(granularity, new Date(), startNum);
+            Date endTime = null;
+            if ("0".equals(end)) {//今天
+                endTime = TimeUtils.addDayStartTime(new Date(), 1);
+            } else if ("1".equals(end)) {//昨天
+                endTime = TimeUtils.addDayStartTime(new Date(), 0);
+            } else if ("2".equals(end)) {//上周
+                endTime = TimeUtils.addWeekStartTime(new Date(), 0);
+            } else if ("3".equals(end)) {//上月
+                endTime = TimeUtils.addMonthStartTime(new Date(), 0);
+            } else if ("4".equals(end)) {//上季度
+                endTime = TimeUtils.addQuarterStartTime(new Date(), 0);
+            }
 
-                }else if("1".equals(start)){//上一个节点
+            sql.append(fid);
+            sql.append(">='");
+            sql.append(DataUtils.formatDate(startTime, DataUtils.datetimeFormat));
+            sql.append("' AND ");
+            sql.append(fid);
+            sql.append("<'");
+            sql.append(DataUtils.formatDate(endTime, DataUtils.datetimeFormat));
+            sql.append("'");
 
-                }else if("2".equals(start)){//下一个节点
-
-                }
-                endTime = TimeUtils.addWeekStartTime(new Date(), endNum + 1);
-                startTime = TimeUtils.addWeekStartTime(endTime, -startNum);
-
-            } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
-
-                endTime = TimeUtils.addMonthStartTime(new Date(), endNum + 1);
-                startTime = TimeUtils.addMonthStartTime(endTime, -startNum);
-
-            } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
-
-                endTime = TimeUtils.addQuarterStartTime(new Date(), endNum + 1);
-                startTime = TimeUtils.addQuarterStartTime(endTime, -startNum);
-
-            } else if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
-
-                endTime = TimeUtils.addYearStartTime(new Date(), endNum + 1);
-                startTime = TimeUtils.addYearStartTime(endTime, -startNum);
-
-            }*/
         } else if ("accurate".equals(type)) {//精确日期
-
+            JSONObject accurate = adv_date_type.getJSONObject("accurate");
+            sql.append(fid);
+            sql.append(">='");
+            sql.append(accurate.getString("start"));
+            sql.append("' AND ");
+            sql.append(fid);
+            sql.append("<'");
+            sql.append(accurate.getString("end"));
+            sql.append("'");
         } else if ("expression".equals(type)) {//表达式
-
+            sql.append(adv_date_type.getString("expression"));
         }
 
-        return null;
+        return sql.toString();
     }
 
     @Override
@@ -561,6 +545,4 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         params.add(optId);
         executeSql(sql.toString(), params.toArray());
     }
-
-
 }

@@ -130,113 +130,7 @@ public class ChartController {
             JSONObject granularity_type = service.queryToolbarGranularity(chart_id, granularity_name);
             JSONArray y = item.getJSONArray("y");
             option.tooltip().formatter("function(params){return tooltipFormatter(params,'" + y + "');}");
-            List<String> aggregatorList = new ArrayList<>();
-            List<String> barNames = new ArrayList<>();
-            List<JSONObject> advance_aggregators = new ArrayList<>();
-            List<String> yuniq_ids = new ArrayList<>();
-            String sortFid = null;
-            //循环Y轴
-            for (int k = 0; k < y.size(); k++) {
-                JSONObject yItem = y.getJSONObject(k);
-                //设置数值数组每个元素的名称
-                barNames.add(yItem.getString("name"));
-                String yFid = yItem.getString("fid");
-                String aggregator = yItem.getString("aggregator");
-                //高级计算 cancel:取消percentage:百分比
-                advance_aggregators.add(yItem.getJSONObject("advance_aggregator"));
-                yuniq_ids.add(yItem.getString("uniq_id"));
-                //去重计数
-                if (Contants.AGG_TYPE_COUNT_DISTINCT.equals(aggregator)) {
-                    aggregator = Contants.AGG_TYPE_COUNT + "(DISTINCT " + yFid + ")";
-                    //中位数&百分位数
-                } else if (Contants.AGG_TYPE_PERCENT.equals(aggregator)) {
-                    Double percent = yItem.getDouble("percent");
-//                        Percentile percentile = new Percentile();
-//                        percentile.setData();
-//                        DescriptiveStatistics ds = new DescriptiveStatistics();
-
-                } else {
-                    //SUM,AVG,COUNT,MAX,MIN
-                    aggregator = aggregator + "(" + yFid + ")";
-                }
-                aggregatorList.add(aggregator + " AS '" + k + "'");
-
-
-                if (sort.getString("uniq_id").equals(yItem.getString("uniq_id"))) {
-                    String sortType = sort.getString("type");
-                    if (Contants.SOTR_TYPE_ASC.equals(sortType)) {
-                        sortFid = aggregator;
-                    } else if (Contants.SOTR_TYPE_DESC.equals(sortType)) {
-                        sortFid = aggregator + " DESC";
-                    }
-                }
-            }
-
-
-            String aggregator = StringUtils.join(aggregatorList, ",");
-            List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql);
-            List<String> xAxis = list.get(list.size() - 1);//X轴
-            CategoryAxis categoryAxis = new CategoryAxis().data(xAxis.toArray()).splitLine(new SplitLine().show(false));
-            if (xAxis.size() > 15) {
-                categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
-            }
-            option.xAxis().add(categoryAxis);
-            for (int j = 0; j < barNames.size(); j++) {
-                //设置Y轴数据
-                Bar bar = new Bar(barNames.get(j));
-                JSONObject advance_aggregator = advance_aggregators.get(i);
-                //高级计算百分比
-                if (advance_aggregator != null && Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
-                    bar.data(service.percentage(list.get(j)).toArray());
-                } else {
-                    bar.data(list.get(j).toArray());
-                }
-
-                for (int z = 0; z < guideLineArr.size(); z++) {
-                    JSONObject guide_line = guideLineArr.getJSONObject(z);
-                    String value_type = guide_line.getString("value_type");
-                    String uniq_id = guide_line.getString("uniq_id");
-                    if (yuniq_ids.get(j).equals(uniq_id)) {
-                        String name = guide_line.getString("name");
-                        //固定值辅助线 jar包功能不完善，使用json代替
-                        if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
-                            double value = guide_line.getDouble("value");
-                            JSONArray coordArray = new JSONArray();
-
-                            //起点
-                            JSONObject coordStart = new JSONObject();
-                            coordStart.put("name", value);
-                            coordStart.put("realName", name);
-                            //x,y轴
-                            coordStart.put("coord", new Object[]{xAxis.get(0), value});
-                            //终点
-                            JSONObject coordStop = new JSONObject();
-                            coordStop.put("coord", new Object[]{xAxis.get(xAxis.size() - 1), value});
-                            coordArray.add(coordStart);
-                            coordArray.add(coordStop);
-                            bar.markLine().data(coordArray);
-                            //计算值辅助线  最大值 最小值 平均值
-                        } else if (Contants.GUIDE_LINE_TYPE_CALCULATE.equals(value_type)) {
-                            PointData pointData = new PointData();
-                            pointData.name(name);
-                            String formula = guide_line.getString("formula");//AVG MIN MAX
-                            if (Contants.AGG_TYPE_AVG.equals(formula)) {
-                                pointData.type(MarkType.average);
-                            } else if (Contants.AGG_TYPE_MAX.equals(formula)) {
-                                pointData.type(MarkType.max);
-                            } else if (Contants.AGG_TYPE_MIN.equals(formula)) {
-                                pointData.type(MarkType.min);
-                            }
-                            bar.markLine().data(pointData);
-                        }
-                    }
-                }
-                option.series().add(bar);
-                //图例在图表下方 默认在上方
-                option.legend().y(Y.bottom).data().add(barNames.get(j));
-//                option.legend().y(Y.bottom).data().add(barNames.get(j));
-            }
-
+            setData(tb_id, filterSql, i, option, guideLineArr, top, sort, xFid, granularity, granularity_type, y);
             options.add(option);
         }
         options.get(0).exportToHtml("test.html");
@@ -246,6 +140,115 @@ public class ChartController {
         respJson.put("option", options.get(0).toString());
         System.out.println(options.get(0));
         return respJson;
+    }
+
+    private void setData(String tb_id, String filterSql, int i, GsonOption option, JSONArray guideLineArr, JSONObject top, JSONObject sort, String xFid, String granularity, JSONObject granularity_type, JSONArray y) {
+        List<String> aggregatorList = new ArrayList<>();
+        List<String> barNames = new ArrayList<>();
+        List<JSONObject> advance_aggregators = new ArrayList<>();
+        List<String> yuniq_ids = new ArrayList<>();
+        String sortFid = null;
+        //循环Y轴
+        for (int k = 0; k < y.size(); k++) {
+            JSONObject yItem = y.getJSONObject(k);
+            //设置数值数组每个元素的名称
+            barNames.add(yItem.getString("name"));
+            String yFid = yItem.getString("fid");
+            String aggregator = yItem.getString("aggregator");
+            //高级计算 cancel:取消percentage:百分比
+            advance_aggregators.add(yItem.getJSONObject("advance_aggregator"));
+            yuniq_ids.add(yItem.getString("uniq_id"));
+            //去重计数
+            if (Contants.AGG_TYPE_COUNT_DISTINCT.equals(aggregator)) {
+                aggregator = Contants.AGG_TYPE_COUNT + "(DISTINCT " + yFid + ")";
+                //中位数&百分位数
+            } else if (Contants.AGG_TYPE_PERCENT.equals(aggregator)) {
+                Double percent = yItem.getDouble("percent");
+//                        Percentile percentile = new Percentile();
+//                        percentile.setData();
+//                        DescriptiveStatistics ds = new DescriptiveStatistics();
+
+            } else {
+                //SUM,AVG,COUNT,MAX,MIN
+                aggregator = aggregator + "(" + yFid + ")";
+            }
+            aggregatorList.add(aggregator + " AS '" + k + "'");
+
+
+            if (sort.getString("uniq_id").equals(yItem.getString("uniq_id"))) {
+                String sortType = sort.getString("type");
+                if (Contants.SOTR_TYPE_ASC.equals(sortType)) {
+                    sortFid = aggregator;
+                } else if (Contants.SOTR_TYPE_DESC.equals(sortType)) {
+                    sortFid = aggregator + " DESC";
+                }
+            }
+        }
+
+
+        String aggregator = StringUtils.join(aggregatorList, ",");
+        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql);
+        List<String> xAxis = list.get(list.size() - 1);//X轴
+        CategoryAxis categoryAxis = new CategoryAxis().data(xAxis.toArray()).splitLine(new SplitLine().show(false));
+        if (xAxis.size() > 15) {
+            categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0).margin(2));
+        }
+        option.xAxis().add(categoryAxis);
+        for (int j = 0; j < barNames.size(); j++) {
+            //设置Y轴数据
+            Bar bar = new Bar(barNames.get(j));
+            JSONObject advance_aggregator = advance_aggregators.get(i);
+            //高级计算百分比
+            if (advance_aggregator != null && Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
+                bar.data(service.percentage(list.get(j)).toArray());
+            } else {
+                bar.data(list.get(j).toArray());
+            }
+
+            for (int z = 0; z < guideLineArr.size(); z++) {
+                JSONObject guide_line = guideLineArr.getJSONObject(z);
+                String value_type = guide_line.getString("value_type");
+                String uniq_id = guide_line.getString("uniq_id");
+                if (yuniq_ids.get(j).equals(uniq_id)) {
+                    String name = guide_line.getString("name");
+                    //固定值辅助线 jar包功能不完善，使用json代替
+                    if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
+                        double value = guide_line.getDouble("value");
+                        JSONArray coordArray = new JSONArray();
+
+                        //起点
+                        JSONObject coordStart = new JSONObject();
+                        coordStart.put("name", value);
+                        coordStart.put("realName", name);
+                        //x,y轴
+                        coordStart.put("coord", new Object[]{xAxis.get(0), value});
+                        //终点
+                        JSONObject coordStop = new JSONObject();
+                        coordStop.put("coord", new Object[]{xAxis.get(xAxis.size() - 1), value});
+                        coordArray.add(coordStart);
+                        coordArray.add(coordStop);
+                        bar.markLine().data(coordArray);
+                        //计算值辅助线  最大值 最小值 平均值
+                    } else if (Contants.GUIDE_LINE_TYPE_CALCULATE.equals(value_type)) {
+                        PointData pointData = new PointData();
+                        pointData.name(name);
+                        String formula = guide_line.getString("formula");//AVG MIN MAX
+                        if (Contants.AGG_TYPE_AVG.equals(formula)) {
+                            pointData.type(MarkType.average);
+                        } else if (Contants.AGG_TYPE_MAX.equals(formula)) {
+                            pointData.type(MarkType.max);
+                        } else if (Contants.AGG_TYPE_MIN.equals(formula)) {
+                            pointData.type(MarkType.min);
+                        }
+                        bar.markLine().data(pointData);
+                    }
+                }
+            }
+            option.series().add(bar);
+            //图例在图表下方 默认在上方
+            option.legend().y(Y.bottom).data().add(barNames.get(j));
+//                option.legend().y(Y.bottom).data().add(barNames.get(j));
+        }
     }
 
 

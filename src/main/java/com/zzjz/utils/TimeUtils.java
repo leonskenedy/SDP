@@ -105,16 +105,46 @@ public class TimeUtils {
         return c.getTime();
     }
 
+    /**
+     * 获取date推迟的年份数第一天的时间，
+     *
+     * @param type 时间类型
+     * @param date 时间
+     * @param n    -1上个时间节点  0当前时间 1下个时间节点 ，依次类推
+     * @return
+     */
+    public static Date addTimeStartTime(String type, Date date, int n) {
+        Date result = null;
+        switch (type) {
+            case Contants.GRANULARITY_TYPE_DAY:
+                result = addDayStartTime(date, n);
+                break;
+            case Contants.GRANULARITY_TYPE_WEEK:
+                result = addWeekStartTime(date, n);
+                break;
+            case Contants.GRANULARITY_TYPE_MONTH:
+                result = addMonthStartTime(date, n);
+                break;
+            case Contants.GRANULARITY_TYPE_QUARTER:
+                result = addQuarterStartTime(date, n);
+                break;
+            case Contants.GRANULARITY_TYPE_YEAR:
+                result = addYearStartTime(date, n);
+            default:
+        }
+        return result;
+    }
+
     public static void main(String[] args) {
         Date startTime, endTime;
         int startNum = 9;//最近时间数值
         int endNum = 2;//默认为当前
-        endTime = TimeUtils.addYearStartTime(new Date(), (-endNum)+1);
+        endTime = TimeUtils.addYearStartTime(new Date(), (-endNum) + 1);
         startTime = TimeUtils.addYearStartTime(endTime, -(startNum));
 
         SimpleDateFormat a = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-        System.out.println("TimeUtils.java-->116:"+a.format(startTime));
-        System.out.println("TimeUtils.java-->116:"+a.format(endTime));
+        System.out.println("TimeUtils.java-->116:" + a.format(startTime));
+        System.out.println("TimeUtils.java-->116:" + a.format(endTime));
 //        System.out.println("TimeUtils.java-->天:" + a.format(addDayStartTime(new Date(), -1)));
 //        System.out.println("TimeUtils.java-->月:" + a.format(addMonthStartTime(new Date(), -1)));
 //        System.out.println("TimeUtils.java-->季度:" + a.format(addQuarterStartTime(new Date(), -1)));

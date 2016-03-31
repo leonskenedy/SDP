@@ -83,11 +83,10 @@ public interface IChartService extends CommonService {
 
     /**
      * 筛选器ID
-     *
-     * @param filterId 筛选器ID
+     *  @param filterId 筛选器ID
      * @param fid
      */
-    JSONObject queryToolbarFilter(String filterId, String fid);
+    String joinTimeSql(String filterId, String fid);
 
     /**
      * 更新工具栏
@@ -106,4 +105,5 @@ public interface IChartService extends CommonService {
      * @return
      */
     String joinFilterSql(JSONArray filterList);
+
 }
