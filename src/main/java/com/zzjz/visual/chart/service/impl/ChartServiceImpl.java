@@ -58,119 +58,47 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
     @Override
     public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql) {
         StringBuffer sql = new StringBuffer("SELECT ");
+        //聚合函数字段
         sql.append(aggregator).append(",");
         if (granularity_type != null) {
-            Integer day_of_week = granularity_type.getInteger("day_of_week");
-            Integer month = granularity_type.getInteger("month");
-            //自定义年
-            if (month != null) {
-                sql.append("CONCAT(IF (");
-                sql.append(xFid);
-                sql.append("> DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(", '%Y-");
-                sql.append(month);
-                sql.append("-");
-                sql.append(granularity_type.getInteger("day"));
-                sql.append("'),year(");
-                sql.append(xFid);
-                sql.append("),year(");
-                sql.append(xFid);
-                sql.append(")-1),'年')");
-                //自定义周分组
-            } else if (day_of_week != null) {
-
-                //自定义月分组
-            } else {
-                sql.append("CASE WHEN ");
-                sql.append(xFid);
-                sql.append("> DATE_FORMAT(time, '%Y-%c-");
-                sql.append(granularity_type.getInteger("day"));
-                sql.append("')");
-                sql.append("THEN DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(", '%Y年%c月')");
-                sql.append("WHEN month(");
-                sql.append(xFid);
-                sql.append(")=1");
-                sql.append("THEN CONCAT(year(");
-                sql.append(xFid);
-                sql.append(")-1,'年','12月')");
-                sql.append("ELSE  CONCAT(year(");
-                sql.append(xFid);
-                sql.append("),'年',month(");
-                sql.append(")-1,'月')END");
-            }
+            //自定义时间分组查询
+            sql.append(customGroupTimeSql(xFid, granularity_type));
         } else {
-            //日期类型统计粒度
-            //年
-            if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
-                sql.append("DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(", '%Y年')");
-                //季度
-            } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
-                sql.append("CONCAT(YEAR (");
-                sql.append(xFid);
-                sql.append("),'年第',QUARTER (time),'季度')");
-                //月
-            } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
-                sql.append("DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(", '%Y年%c月')");
-                //周
-            } else if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
-                sql.append("CONCAT(YEAR (");
-                sql.append(xFid);
-                sql.append("),'年第',WEEK (");
-                sql.append(xFid);
-                sql.append(", 1),'周（',DATE_FORMAT(date_add(");
-                sql.append(xFid);
-                sql.append("INTERVAL - DAYOFweek(");
-                sql.append(xFid);
-                sql.append(") + 2 DAY),'%c/%e'),'~',DATE_FORMAT(date_add(");
-                sql.append(xFid);
-                sql.append(",INTERVAL 7 - DAYOFweek(");
-                sql.append(xFid);
-                sql.append(") + 1 DAY),'%c/%e）'))");
-                //天
-            } else if (Contants.GRANULARITY_TYPE_DAY.equals(granularity)) {
-                sql.append("DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(", '%Y年%c月%e日')");
-                //时
-            } else if (Contants.GRANULARITY_TYPE_HOUR.equals(granularity)) {
-                sql.append("DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(",'%Y年%c月%e日 %H时')");
-                //分
-            } else if (Contants.GRANULARITY_TYPE_MINUTE.equals(granularity)) {
-                sql.append("DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(",'%Y年%c月%e日 %H时%i分')");
-                //秒
-            } else if (Contants.GRANULARITY_TYPE_SECOND.equals(granularity)) {
-                sql.append("DATE_FORMAT(");
-                sql.append(xFid);
-                sql.append(",'%Y年%c月%e日 %H时%i分%S秒')");
-            } else {//null
-                sql.append(xFid);
-            }
+            //常规分组查询
+            sql.append(groupSql(xFid, granularity));
         }
+
         sql.append(" AS xAxis FROM ").append(tb_id).append(" ");
 
-        if (StringUtils.isNotBlank(filterSql)) {//筛选器sql
+        if (StringUtils.isNotBlank(filterSql)) {
+            //筛选器sql
             sql.append(" WHERE ").append(filterSql);
         }
 
         sql.append(" GROUP BY xAxis ORDER BY ");
+
+        //排序字段
         if (StringUtils.isBlank(sortFid)) {
             sql.append("xAxis");
         } else {
             sql.append(sortFid);
         }
 
+        //截取行数sql
+        sql.append(limitSql(top, sql.toString()));
 
+
+        List<List<String>> list = getArrayList(sql.toString());
+        return list;
+    }
+
+    /**
+     * 截取固定行数的sql
+     * @param top 截取参数对象
+     * @return
+     */
+    private String limitSql(JSONObject top,String sql) {
+        StringBuffer limitSql = new StringBuffer();
         //是否勾选维度显示条目数
         if (top.getBoolean("enabled")) {
             String topType = top.getString("type");
@@ -182,29 +110,26 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
                     numValue = numValue / 100 * count;//百分比条目数
                 }
                 if (top.getIntValue("reversed") == 0) {//前
-
-//                    list.set(1, item.subList(0, numValue));
                     if (numValue.intValue() > 0) {
-                        sql.append(" LIMIT ").append(numValue.intValue());
+                        limitSql.append(" LIMIT ").append(numValue.intValue());
                     } else {
-                        sql.append(" LIMIT 1");
+                        limitSql.append(" LIMIT 1");
                     }
                 } else if (top.getIntValue("reversed") == 1) {//后
-//                    list.set(1, item.subList(numValue, list.size() - 1));
                     long num = Long.parseLong(count + "") - numValue.intValue();
                     if (num > 0 && num < count) {
-                        sql.append(" LIMIT ").append(num).append(",").append(count);
+                        limitSql.append(" LIMIT ").append(num).append(",").append(count);
                     } else {
-                        sql.append(" LIMIT ").append(count - 1).append(",").append(count);
+                        limitSql.append(" LIMIT ").append(count - 1).append(",").append(count);
                     }
 
                 }
 
             }
         }
-        List<List<String>> list = getArrayList(sql.toString());
-        return list;
+        return limitSql.toString();
     }
+
 
     @Override
     public List<List<String>> getArrayList(String tb_id, String xFid, String yFid) {
@@ -251,7 +176,6 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
     public JSONObject queryToolbarGranularity(String chartId, String granularity_name) {
         if (StringUtils.isNotBlank(granularity_name)) {
             StringBuffer sql = new StringBuffer("SELECT granularity_type");
-//            sql.append(type);
             sql.append(" FROM toolbar WHERE chart_id=?");
             List<List<String>> list = getArrayList(sql.toString(), chartId);
             JSONObject granularity_type = (JSONObject) JSONObject.parse(list.get(0).get(0));
@@ -544,5 +468,123 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         sql.append(" WHERE id=?");
         params.add(optId);
         executeSql(sql.toString(), params.toArray());
+    }
+
+    /**
+     * 常规时间查询sql
+     *
+     * @param xFid
+     * @param granularity 时间类型
+     * @return
+     */
+    private String groupSql(String xFid, String granularity) {
+        StringBuffer sql = new StringBuffer(200);
+        //日期类型统计粒度
+        //年
+        if (Contants.GRANULARITY_TYPE_YEAR.equals(granularity)) {
+            sql.append("DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(", '%Y年')");
+            //季度
+        } else if (Contants.GRANULARITY_TYPE_QUARTER.equals(granularity)) {
+            sql.append("CONCAT(YEAR (");
+            sql.append(xFid);
+            sql.append("),'年第',QUARTER (time),'季度')");
+            //月
+        } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
+            sql.append("DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(", '%Y年%c月')");
+            //周
+        } else if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
+            sql.append("CONCAT(YEAR (");
+            sql.append(xFid);
+            sql.append("),'年第',WEEK (");
+            sql.append(xFid);
+            sql.append(", 1),'周（',DATE_FORMAT(date_add(");
+            sql.append(xFid);
+            sql.append("INTERVAL - DAYOFweek(");
+            sql.append(xFid);
+            sql.append(") + 2 DAY),'%c/%e'),'~',DATE_FORMAT(date_add(");
+            sql.append(xFid);
+            sql.append(",INTERVAL 7 - DAYOFweek(");
+            sql.append(xFid);
+            sql.append(") + 1 DAY),'%c/%e）'))");
+            //天
+        } else if (Contants.GRANULARITY_TYPE_DAY.equals(granularity)) {
+            sql.append("DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(", '%Y年%c月%e日')");
+            //时
+        } else if (Contants.GRANULARITY_TYPE_HOUR.equals(granularity)) {
+            sql.append("DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(",'%Y年%c月%e日 %H时')");
+            //分
+        } else if (Contants.GRANULARITY_TYPE_MINUTE.equals(granularity)) {
+            sql.append("DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(",'%Y年%c月%e日 %H时%i分')");
+            //秒
+        } else if (Contants.GRANULARITY_TYPE_SECOND.equals(granularity)) {
+            sql.append("DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(",'%Y年%c月%e日 %H时%i分%S秒')");
+        } else {//非时间分组查询
+            sql.append(xFid);
+        }
+        return sql.toString();
+    }
+
+    /**
+     * 自定义分组时间查询sql
+     *
+     * @param xFid
+     * @param granularity_type 自定义时间对象
+     */
+    private String customGroupTimeSql(String xFid, JSONObject granularity_type) {
+        StringBuffer sql = new StringBuffer(200);
+        Integer day_of_week = granularity_type.getInteger("day_of_week");
+        Integer month = granularity_type.getInteger("month");
+        //自定义年
+        if (month != null) {
+            sql.append("CONCAT(IF (");
+            sql.append(xFid);
+            sql.append("> DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(", '%Y-");
+            sql.append(month);
+            sql.append("-");
+            sql.append(granularity_type.getInteger("day"));
+            sql.append("'),year(");
+            sql.append(xFid);
+            sql.append("),year(");
+            sql.append(xFid);
+            sql.append(")-1),'年')");
+            //自定义周分组
+        } else if (day_of_week != null) {
+
+            //自定义月分组
+        } else {
+            sql.append("CASE WHEN ");
+            sql.append(xFid);
+            sql.append("> DATE_FORMAT(time, '%Y-%c-");
+            sql.append(granularity_type.getInteger("day"));
+            sql.append("')");
+            sql.append("THEN DATE_FORMAT(");
+            sql.append(xFid);
+            sql.append(", '%Y年%c月')");
+            sql.append("WHEN month(");
+            sql.append(xFid);
+            sql.append(")=1");
+            sql.append("THEN CONCAT(year(");
+            sql.append(xFid);
+            sql.append(")-1,'年','12月')");
+            sql.append("ELSE  CONCAT(year(");
+            sql.append(xFid);
+            sql.append("),'年',month(");
+            sql.append(")-1,'月')END");
+        }
+        return sql.toString();
     }
 }
