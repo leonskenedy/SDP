@@ -25,11 +25,7 @@ public class VisiualController {
         return "chart/index";
     }
 
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    @ResponseBody
-    public Object getList() {
-        return JSONObject.toJSON(testService.getList());
-    }
+
 
     @RequestMapping(value = "/views/**", method = RequestMethod.GET)
     public String toViewPage(HttpServletRequest request) {

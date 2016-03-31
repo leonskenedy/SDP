@@ -622,7 +622,7 @@ $(document).ready(function(){
             $(this).removeClass('zzjz-axis-over');
             var columnEn = $(source).attr("column_en");
             var columnType = $(source).attr("column_type");
-            window._filterConfig = {isEdit: false, columnEn: columnEn, columnType: columnType}
+            window._filterConfig = {isEdit: false, columnEn: columnEn, columnType: columnType, columnCn: $(source).attr("column_cn")}
             initFilter(columnEn, columnType);
         }
     });
