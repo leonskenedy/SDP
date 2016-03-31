@@ -258,9 +258,17 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
     background-color: rgba(120, 210, 255, 0.47);
 }
 
-
-
-
+.zzjz-filter-data-panel-div{
+    margin: 5px;
+}
+.zzjz-filter-panel-body{
+    max-height: 120px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.zzjz-filter-panel-body p{
+    margin: 10px;
+}
 
 ::-webkit-scrollbar {
     width: 8px;

@@ -602,6 +602,7 @@ $(document).ready(function(){
     $(".zzjz-echart-div-left").append(
         $("<div class='zzjz-data-filter'></div>").append(
             $("<div class='zzjz-title-div' style='margin: 0;padding: 5px 5px 10px 5px;'></div>").text("筛选器"))
+            .append($("<div class='zzjz-filter-data-panel-div'></div>"))
     );
 
     $(".zzjz-data-filter").droppable({

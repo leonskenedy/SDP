@@ -20,14 +20,35 @@ function setupDataFilter(){
                             $.messager.alert("提示", "无任何过滤数据项", "info");
                             return;
                         }
-                        var filterList = chart.meta.level[0].filter_list;
-                        filterList.push({
+                        var filterList = chart.meta.filter_list?chart.meta.filter_list:chart.meta.filter_list=[];
+                        var filterItem = {
                             name: $(".zzjz-column-div[column_en="+_filterConfig.columnEn+"]").attr("column_cn"),
                             data_type: dataType[_filterConfig.columnType],
                             adv_type: "exact",
-                            range_type: $(".zzjz-filter-select").combobox("getValue")
+                            range_type: $(".zzjz-filter-select").combobox("getValue"),
+                            range:datas.map(function(o){return o[_filterConfig.columnEn]}),
+                            fid:_filterConfig.columnEn,
+                            is_all:false,
+                            total:10000
+                        }
+                        filterList.push(filterItem);
+                        var panel = $("<div class='zzjz-filter-data-panel'></div>").attr("column_en", _filterConfig.columnEn)
+                            .appendTo($(".zzjz-filter-data-panel-div")).panel({
+                                title:$(".zzjz-column-div[column_en="+_filterConfig.columnEn+"]").attr("column_cn"),
+                                collapsible:true,
+                                bodyCls:"zzjz-filter-panel-body",
+                                tools:[
+                                    {
+                                        iconCls:"icon-edit",
+                                        handler:function(){
+                                            alert(111)
+                                        }
+                                    }
+                                ]
+                            }).append($("<p />").text(filterItem.range_type == "0" ? "排除下列项" : "包含下列项"))
+                            .append(filterItem.range.map(function(s){return $("<p></p>").text(s)}));
+                        $("#data_filter_dialog").dialog("close");
 
-                        })
                     }
                 }
             },{
