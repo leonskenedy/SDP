@@ -270,6 +270,16 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
     margin: 10px;
 }
 
+#condition_filter .textbox{
+    margin-left: 15px;
+}
+#condition_filter .datagrid{
+    margin-top: 5px;
+}
+
+
+
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
