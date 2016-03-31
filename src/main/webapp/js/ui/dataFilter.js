@@ -26,7 +26,7 @@ function setupDataFilter(){
                             data_type: dataType[_filterConfig.columnType],
                             adv_type: "exact",
                             range_type: $(".zzjz-filter-select").combobox("getValue"),
-                            range:datas.map(function(o){return o[_filterConfig.columnEn]}),
+                            range:[JSON.stringify(datas.map(function(o){return o[_filterConfig.columnEn]}))],
                             fid:_filterConfig.columnEn,
                             is_all:false,
                             total:10000
