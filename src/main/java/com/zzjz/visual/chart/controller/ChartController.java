@@ -86,8 +86,8 @@ public class ChartController {
             //设置主标题，主标题居中
             option.title().text(json.getString("name")).x(X.center);
 //            option.title().text(json.getString("name"));
-            //Tool.mark 无效
-            option.toolbox().show(true).feature(Tool.dataZoom, Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
+            //Tool.mark 无效 Tool.dataZoom,数值过大有问题，Y轴显示不了
+            option.toolbox().show(true).feature( Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
             option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
             option.tooltip().padding(10).backgroundColor("white").borderColor("#7ABCE9").borderWidth(2);
             option.grid(new Grid().x(40).x2(100).y2(150));
@@ -136,6 +136,8 @@ public class ChartController {
         List<String> aggregatorList = new ArrayList<>();//聚合函数集合
 
         String sortFid = null;
+        //回传到前台处理数字格式化参数
+        JSONArray formatterJson = new JSONArray();
         //排序
         JSONObject sort = item.getJSONObject("sort");
         for (int i = 0; i < type_optional.size(); i++) {
@@ -145,6 +147,7 @@ public class ChartController {
             } else if (i == 1) {
                 y = item.getJSONArray("y_optional");
             }
+            formatterJson.addAll(y);
 
             //循环Y轴
             for (int k = 0; k < y.size(); k++) {
@@ -185,7 +188,7 @@ public class ChartController {
         //维度显示条目数
         JSONObject top = item.getJSONObject("top");
 
-//        option.tooltip().formatter("function(params){return tooltipFormatter(params,'" + y + "');}");
+        option.tooltip().formatter("function(params){return tooltipFormatter(params,'" + formatterJson + "');}");
 
 
         String aggregator = StringUtils.join(aggregatorList, ",");

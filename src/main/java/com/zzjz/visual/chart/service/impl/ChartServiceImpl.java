@@ -306,7 +306,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
                             } else if (calc_type == 7) {//不包含
                                 filterSql.append(" NOT LIKE '%").append(value).append("%'");
                             } else if (calc_type == 10) {//开头包含
-                                filterSql.append(" NOT LIKE '").append(value).append("%'");
+                                filterSql.append(" LIKE '").append(value).append("%'");
                             } else if (calc_type == 11) {//结尾包含
                                 filterSql.append(" NOT LIKE '%").append(value).append("'");
                             }
