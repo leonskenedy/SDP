@@ -276,10 +276,18 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
 #condition_filter .datagrid{
     margin-top: 5px;
 }
-
-
-
-
+#expression_filter .textbox{
+    margin: 10px;
+}
+.zzjz-expression-add, .zzjz-expression-validate{
+    margin-left: 10px;margin-bottom: 10px;margin-right: 10px;
+}
+.zzjz-expression-validate{
+    float: right;
+}
+.zzjz-expression-hint{
+    margin-left: 10px;
+}
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;

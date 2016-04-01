@@ -693,7 +693,7 @@ function gatherData(){
     $.ajax({
         url: "../chart/update",
         type:"post",
-        data:JSON.stringify(chart),
+        data:encodeURIComponent(JSON.stringify(chart)),
         dataType:"json",
         success:function(data){
             try{

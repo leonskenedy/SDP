@@ -1,6 +1,8 @@
 package com.zzjz.visual.chart.service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -34,6 +36,27 @@ public class TestService {
             e.printStackTrace();
         }finally {
             s.close();
+        }
+        return result;
+    }
+
+    public JSONObject validateGrammar(String tName, String jStr){
+        JSONObject result = new JSONObject();
+        JSONObject object = JSON.parseObject(jStr);
+        String columnName = object.getString("fid");
+        String sql = object.getJSONArray("range").getString(0).replaceAll("\\[_field_id_\\]", columnName);
+        Session s = null;
+        try{
+            s = factory.openSession();
+            s.createSQLQuery("select 1 from " + tName + " where " + sql).list();
+            result.put("valid", true);
+        }catch (Exception e){
+            e.printStackTrace();
+            result.put("valid", false);
+        }finally {
+            if(s != null){
+                s.close();
+            }
         }
         return result;
     }

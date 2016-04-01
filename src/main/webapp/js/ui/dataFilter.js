@@ -101,9 +101,57 @@ function setupDataFilter(){
                                 )
                             );
                             $("#data_filter_dialog").dialog("close");
+                        }else{
+                            var sql = $.trim($(".zzjz-expression-input").textbox("getValue"));
+                            var oSql = sql;
+                            if(sql == ""){
+                                $.messager.alert("提示", "无任何表达式内容", "error");
+                                return;
+                            }
+                            var target = "["+_filterConfig.columnCn +"]";
+                            while(sql.search(target) > -1){
+                                sql = sql.replace(target, _filterConfig.columnEn);
+                            }
+                            var filterItem = {
+                                name: _filterConfig.columnCn,
+                                data_type: dataType[_filterConfig.columnType],
+                                adv_type: filterType,
+                                range_type: "1",
+                                range:[sql],
+                                fid:_filterConfig.columnEn,
+                                oSql: oSql,
+                                is_all:false,
+                                total:10000
+                            };
+                            $.ajax({
+                                url: "validateGrammar",
+                                data:{tableName: "product", json: JSON.stringify(filterItem)},
+                                async: false,
+                                dataType: "json",
+                                success: function(data){
+                                    if(data.valid){
+                                        filterList.push(filterItem);
+                                        $("<div class='zzjz-filter-data-panel'></div>").attr("column_en", _filterConfig.columnEn)
+                                            .appendTo($(".zzjz-filter-data-panel-div")).panel({
+                                                title:$(".zzjz-column-div[column_en="+_filterConfig.columnEn+"]").attr("column_cn"),
+                                                collapsible:true,
+                                                bodyCls:"zzjz-filter-panel-body",
+                                                tools:[
+                                                    {
+                                                        iconCls:"icon-edit",
+                                                        handler:function(){
+                                                            alert(111)
+                                                        }
+                                                    }
+                                                ]
+                                            }).append($("<p />").text("自定义表达式"));
+                                        $("#data_filter_dialog").dialog("close");
+                                    }else{
+                                        $.messager.alert("错误", "语法检查失败.", "error");
+                                    }
+                                }
+                            })
                         }
-
-
                     }
                 }
             },{
@@ -113,7 +161,7 @@ function setupDataFilter(){
                 }
             }],
             onOpen:function(){
-                $("#condition_column_cn").text($(".zzjz-column-div[column_en="+_filterConfig.columnEn+"]").attr("column_cn"))
+                $("#condition_column_cn").add($(".zzjz-expression-hint").find("span")).text(_filterConfig.columnCn)
             }
         }).append($("<div></div>").attr("id", "filter_tab"))
         .find("#filter_tab").tabs({
@@ -237,6 +285,50 @@ function setupDataFilter(){
             },{
                 field:"keyword", title: "关键字", width:"40%"
             }]]
+        });
+
+    //表达式
+    $("#expression_filter").append($("<input class='zzjz-expression-input' />")).append($("<br />"))
+        .append($("<a class='zzjz-expression-add'></a>")).append($("<a class='zzjz-expression-validate'></a>"))
+        .append($("<div class='zzjz-expression-hint'>示例: [<span></span>]='某某', 且名称需与筛选器名称相同</div>"))
+        .find(".zzjz-expression-input").textbox({
+            multiline: true,
+            height: 250,
+            width:564
+        }).parent().find(".zzjz-expression-add").linkbutton({
+            text:"插入字段",
+            iconCls: "icon-add",
+            onClick: function(){
+                var input = $(".zzjz-expression-input");
+                input.textbox("setValue", input.textbox("getValue") + "[" + _filterConfig.columnCn + "]");
+            }
+        }).parent().find(".zzjz-expression-validate").linkbutton({
+            text:"检查语法",
+            onClick:function(){
+                var sql = $.trim($(".zzjz-expression-input").textbox("getValue"));
+                if(sql == ""){
+                    $.messager.alert("提示", "无任何表达式内容", "error");
+                    return;
+                }
+                var target = "["+_filterConfig.columnCn +"]";
+                while(sql.search(target) > -1){
+                    sql = sql.replace(target, "[_field_id_]");
+                }
+                $.ajax({
+                    url:"validateGrammar",
+                    data:{tableName: "product", json: JSON.stringify({fid:_filterConfig.columnEn, range:[sql]})},
+                    async:false,
+                    type: "post",
+                    dataType: "json",
+                    success: function(data){
+                        if(data.valid){
+                            $.messager.alert("提示", "语法检查通过", "info");
+                        }else{
+                            $.messager.alert("提示", "语法检查失败", "error");
+                        }
+                    }
+                })
+            }
         })
 }
 

@@ -30,4 +30,10 @@ public class UIController {
     public Object getUniqueData(@RequestParam String columnName, @RequestParam(required = false, defaultValue = "") String keyword){
         return testService.getUniqueColumnData(columnName, keyword);
     }
+
+    @RequestMapping(value = "/validateGrammar", method = {RequestMethod.GET, RequestMethod.POST})
+    @ResponseBody
+    public Object validateGrammar(@RequestParam String tableName, @RequestParam String json){
+        return testService.validateGrammar(tableName, json);
+    }
 }
