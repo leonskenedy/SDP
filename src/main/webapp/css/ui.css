@@ -288,6 +288,10 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
 .zzjz-expression-hint{
     margin-left: 10px;
 }
+
+#number_condition_filter .combo{
+    margin-right: 20px;
+}
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;

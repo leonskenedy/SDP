@@ -101,6 +101,58 @@ function setupDataFilter(){
                                 )
                             );
                             $("#data_filter_dialog").dialog("close");
+
+                        }else if(filterType == "number_condition"){
+                            var type = $(".zzjz-number-condition-select").combobox("getValue");
+                            var first = $.trim($(".zzjz-number-condition-input").first().textbox("getValue"));
+                            var second = null;
+                            if(type == "6"){
+                                second = $.trim($(".zzjz-number-condition-input").eq(1).textbox("getValue"));
+                            }
+                            if(first == "" || isNaN(first * 1)){
+                                $.messager.alert("错误", "请填写正确的数值", "error");
+                                return;
+                            }
+                            if(second != null && (second == "" || isNaN(second * 1))){
+                                $.messager.alert("错误", "请填写正确的数值", "error");
+                                return;
+                            }
+                            var range = {condition_type: 2, conditions:[]};
+                            if(second != null){
+                                range.conditions.push({calc_type:4,value:first});
+                                range.conditions.push({calc_type:5,value:second});
+                            }else{
+                                range.conditions.push({calc_type:type,value:first});
+                            }
+                            var filterItem = {
+                                name: _filterConfig.columnCn,
+                                data_type: dataType[_filterConfig.columnType],
+                                adv_type: "condition",
+                                range:[JSON.stringify(range)],
+                                fid:_filterConfig.columnEn,
+                                is_all:false
+                            };
+                            filterList.push(filterItem);
+                            var div = $("<div class='zzjz-filter-data-panel'></div>").attr("column_en", _filterConfig.columnEn)
+                                .appendTo($(".zzjz-filter-data-panel-div")).panel({
+                                    title:_filterConfig.columnCn,
+                                    collapsible:true,
+                                    bodyCls:"zzjz-filter-panel-body",
+                                    tools:[
+                                        {
+                                            iconCls:"icon-edit",
+                                            handler:function(){
+                                                alert(111)
+                                            }
+                                        }
+                                    ]
+                                }).append($("<p>条件满足</p>"));
+                            if(second != null){
+                                div.append($("<p />").text(first + "～" + second));
+                            }else{
+                                div.append($("<p />").text($(".zzjz-number-condition-select").combobox("getText") + " " + first))
+                            }
+                            $("#data_filter_dialog").dialog("close");
                         }else{
                             var sql = $.trim($(".zzjz-expression-input").textbox("getValue"));
                             var oSql = sql;
@@ -161,7 +213,21 @@ function setupDataFilter(){
                 }
             }],
             onOpen:function(){
-                $("#condition_column_cn").add($(".zzjz-expression-hint").find("span")).text(_filterConfig.columnCn)
+                $("#condition_column_cn").add($(".zzjz-expression-hint").find("span")).text(_filterConfig.columnCn);
+                var tabLis = $("#filter_tab").find("ul > li");
+                tabLis.show();
+                switch (_filterConfig.columnType){
+                    case "1":
+                        tabLis.eq(0).hide();
+                        tabLis.eq(1).hide();
+                        $("#filter_tab").tabs("select", 2);
+                        break;
+                    case "2":
+                        tabLis.eq(2).hide();
+                        $("#filter_tab").tabs("select", 0);
+                        break
+                }
+
             }
         }).append($("<div></div>").attr("id", "filter_tab"))
         .find("#filter_tab").tabs({
@@ -176,6 +242,10 @@ function setupDataFilter(){
             title: "条件筛选",
             content: "<div class='filter_definition_div' style='margin: 10px' id='condition_filter'></div>",
             id: "adv_type_condition"
+        }).tabs("add", {
+            title: "条件筛选",
+            content: "<div class='filter_definition_div' style='margin: 10px' id='number_condition_filter'></div>",
+            id: "adv_type_number_condition"
         }).tabs("add", {
             title: "表达式",
             content: "<div class='filter_definition_div' id='expression_filter'></div>",
@@ -329,7 +399,38 @@ function setupDataFilter(){
                     }
                 })
             }
-        })
+        });
+    //数值类型条件匹配
+    $("#number_condition_filter").append($("<div style='height: 100px'></div>")).append(
+        $("<select class='zzjz-number-condition-select'></select>")
+    ).append(
+        $("<input class='zzjz-number-condition-input single' />")
+    ).find(".zzjz-number-condition-select").combobox({
+            data:[{value:"0", label:"等于"},{value:"1", label:"不等于"},{value:"2", label:"大于"},{value:"3", label:"小于"},{value:"4", label:"大于等于"},{value:"5", label:"小于等于"},{value:"6", label:"区间"}],
+            textField:"label",
+            valueField:"value",
+            value: "0",
+            width:100,
+            panelHeight: 180,
+            onChange:function(nValue, oValue){
+                if(nValue == "6"){
+                    $("#number_condition_filter").find(".zzjz-number-condition-input").textbox("destroy");
+                    $("#number_condition_filter").append(
+                        $("<input class='zzjz-number-condition-input between' /><span class='between'>～</span><input class='zzjz-number-condition-input end' between />")
+                    ).find(".zzjz-number-condition-input").textbox({width:100,prompt: "请输入数值"})
+                }
+                if(oValue == "6"){
+                    $("#number_condition_filter").find(".zzjz-number-condition-input").textbox("destroy");
+                    $("#number_condition_filter").find("span.between").remove();
+                    $("#number_condition_filter").append(
+                        $("<input class='zzjz-number-condition-input single' />")
+                    ).find(".zzjz-number-condition-input").textbox({width:210, prompt: "请输入数值"})
+                }
+            }
+        }).parent().find(".zzjz-number-condition-input").textbox({width:210, prompt: "请输入数值"})
+    /**
+     * <input class='zzjz-number-condition-input between' /><span class='between'>～</span><input class='zzjz-number-condition-input end' between />
+     */
 }
 
 function initFilter(columnEn, columnType, isEdit){
