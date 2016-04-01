@@ -8,7 +8,6 @@ import com.zzjz.utils.Contants;
 import com.zzjz.utils.DataUtils;
 import com.zzjz.utils.TimeUtils;
 import com.zzjz.visual.chart.service.IChartService;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -27,36 +26,9 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         executeSql(sql, chartId, reqInfo, respInfo);
     }
 
-    @Override
-    public List<String> queryRowUniqVal(String fid, String tb_id) {
-        /*List<Map<String, Object>> valList = findForJdbc("select DISTINCT " + fid + " from " + tb_id + " order by " + fid);
-        List<Object> vals = new ArrayList<>(valList.size());
-        for (Map<String, Object> map : valList) {
-            vals.add(map.get(fid));
-        }*/
-        List<List<String>> list = getArrayList("select DISTINCT " + fid + " from " + tb_id + " order by " + fid);
-        return CollectionUtils.isEmpty(list) ? new ArrayList<String>() : list.get(0);
-    }
 
     @Override
-    public Object[] calculate(String tb_id, String xFid, String yFid, Object... xAxis) {
-
-        List<Object> values = Lists.newArrayList();
-        for (Object item : xAxis) {
-
-            StringBuffer sql = new StringBuffer(200);
-            sql.append("select ");
-//            sql.append(aggregator);
-            sql.append(yFid);
-            sql.append(" from ").append(tb_id).append(" where ").append(xFid).append("=?");
-            List<Map<String, Object>> valList = findForJdbc(sql.toString(), item);
-//            values.add(valList.get(0).get(aggregator));
-        }
-        return values.toArray();
-    }
-
-    @Override
-    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql) {
+    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql, String aggr_filterSql) {
         StringBuffer sql = new StringBuffer("SELECT ");
         //聚合函数字段
         sql.append(aggregator).append(",");
@@ -70,10 +42,18 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
         sql.append(" AS xAxis FROM ").append(tb_id).append(" ");
 
-        if (StringUtils.isNotBlank(filterSql)) {
+        if (StringUtils.isNotBlank(filterSql) || StringUtils.isNotBlank(aggr_filterSql)) {
+            sql.append(" WHERE ");
             //筛选器sql
-            sql.append(" WHERE ").append(filterSql);
+            if (StringUtils.isNotBlank(filterSql)) {
+                sql.append(filterSql);
+            }
+            //结果筛选器sql
+            if (StringUtils.isNotBlank(aggr_filterSql)) {
+                sql.append(aggr_filterSql);
+            }
         }
+
 
         sql.append(" GROUP BY xAxis ORDER BY ");
 
@@ -94,10 +74,11 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
     /**
      * 截取固定行数的sql
+     *
      * @param top 截取参数对象
      * @return
      */
-    private String limitSql(JSONObject top,String sql) {
+    private String limitSql(JSONObject top, String sql) {
         StringBuffer limitSql = new StringBuffer();
         //是否勾选维度显示条目数
         if (top.getBoolean("enabled")) {
@@ -128,18 +109,6 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             }
         }
         return limitSql.toString();
-    }
-
-
-    @Override
-    public List<List<String>> getArrayList(String tb_id, String xFid, String yFid) {
-      /*  List<String> vals = queryRowUniqVal(xFid, tb_id);
-        StringBuffer sql = new StringBuffer("select ");
-        sql.append(aggregator).append(" from ").append(tb_id).append(" where ").append(xFid).append("=?");
-        for (String val : vals) {
-            List<String> list = getArrayList(sql.toString(),val);
-        }*/
-        return null;
     }
 
     @Override

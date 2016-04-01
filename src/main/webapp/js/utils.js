@@ -94,11 +94,14 @@ function newline(option, number, axis) {
 function tooltipFormatter(params, yAxis) {
     var res;
     console.log(params)
+    console.log(eval(yAxis))
     if (params instanceof Array) {//柱子提示
         res = '<span style="color: black">' + params[0].name + '</span>';
         yAxis = eval(yAxis);
         $.each(yAxis, function (index) {
-            res += '<br/><span style="font-weight:bold;color: ' + params[index].color + '">' + params[index].seriesName + ' : ';
+            var name = this.nick_name&&$.trim(this.nick_name)!="" ? this.nick_name : params[index].seriesName;
+
+            res += '<br/><span style="font-weight:bold;color: ' + params[index].color + '">' + name + ' : ';
             var formatter = this.formatter;
             if (formatter.check == "num") {//数值
                 var num = formatter.num;
@@ -114,12 +117,16 @@ function tooltipFormatter(params, yAxis) {
                 var digit = percent.digit;
                 res += formatNumber(params[index].value, digit, 2);
             }
+            var unit_adv = this.unit_adv;//字段单位
+            if(unit_adv&& $.trim(unit_adv)!=""){
+                res+=unit_adv;
+            }
             res += "</span>";
         });
     } else {//辅助线提示
         res = '<span style="color: black">';
         if (params.data  instanceof Array) {
-            res +=  params.data[0]['realName'];//固定值辅助线名称
+            res += params.data[0]['realName'];//固定值辅助线名称
         } else {
             res += params["name"];//其余辅助线名称
         }
