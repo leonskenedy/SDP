@@ -48,9 +48,10 @@ public interface IChartService extends CommonService {
      * @param top
      * @param sort
      * @param s
+     * @param toString
      * @return 返回分组查询的字段的数据集合, 多个字段就是多个集合
      */
-    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name, JSONObject top, String sort, String s);
+    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name, JSONObject top, String sort, String s, String toString);
 
     /**
      * 返回查询字段的数据集合，多个字段就是多个集合

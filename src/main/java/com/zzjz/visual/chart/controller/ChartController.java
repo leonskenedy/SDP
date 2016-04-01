@@ -87,7 +87,7 @@ public class ChartController {
             option.title().text(json.getString("name")).x(X.center);
 //            option.title().text(json.getString("name"));
             //Tool.mark 无效 Tool.dataZoom,数值过大有问题，Y轴显示不了
-            option.toolbox().show(true).feature( Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
+            option.toolbox().show(true).feature(Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
             option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
             option.tooltip().padding(10).backgroundColor("white").borderColor("#7ABCE9").borderWidth(2);
             option.grid(new Grid().x(40).x2(100).y2(150));
@@ -140,6 +140,10 @@ public class ChartController {
         JSONArray formatterJson = new JSONArray();
         //排序
         JSONObject sort = item.getJSONObject("sort");
+
+        //结果最大最小值筛选器
+        StringBuffer aggr_filterSql = new StringBuffer();
+
         for (int i = 0; i < type_optional.size(); i++) {
             JSONArray y = null;
             if (i == 0) {
@@ -156,7 +160,6 @@ public class ChartController {
                 String yFid = yItem.getString("fid");
                 String aggregator = yItem.getString("aggregator");
 
-
                 //去重计数
                 if (Contants.AGG_TYPE_COUNT_DISTINCT.equals(aggregator)) {
                     aggregator = Contants.AGG_TYPE_COUNT + "(DISTINCT " + yFid + ")";
@@ -171,8 +174,24 @@ public class ChartController {
                     //SUM,AVG,COUNT,MAX,MIN
                     aggregator = aggregator + "(" + yFid + ")";
                 }
+
                 aggregatorList.add(aggregator + " AS '" + k + "'");
 
+                //结果筛选器
+                JSONObject aggr_filter = yItem.getJSONObject("aggr_filter");
+                if (aggr_filter != null) {
+                    String max = aggr_filter.getString("max");
+                    String min = aggr_filter.getString("min");
+                    if (StringUtils.isNotBlank(aggr_filterSql)) {
+                        aggr_filterSql.append(" AND ");
+                    }
+                    if (StringUtils.isNotBlank(max)) {
+                        aggr_filterSql.append(" ").append(aggregator).append("<=").append(max);
+                    }
+                    if (StringUtils.isNotBlank(min)) {
+                        aggr_filterSql.append(" ").append(aggregator).append(">=").append(min);
+                    }
+                }
 
                 if (sort.getString("uniq_id").equals(yItem.getString("uniq_id"))) {
                     String sortType = sort.getString("type");
@@ -193,7 +212,7 @@ public class ChartController {
 
         String aggregator = StringUtils.join(aggregatorList, ",");
 
-        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql);
+        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql,aggr_filterSql.toString());
         List<String> xAxis = list.get(list.size() - 1);//X轴
         CategoryAxis categoryAxis = new CategoryAxis().data(xAxis.toArray()).splitLine(new SplitLine().show(false));
         if (xAxis.size() > 8) {
@@ -250,12 +269,17 @@ public class ChartController {
             }
             for (int j = 0; j < y.size(); j++) {
                 JSONObject yItem = y.getJSONObject(j);
-                String name = yItem.getString("name");
+
+                String name = yItem.getString("nick_name");//别名
+
+                if (StringUtils.isBlank(name)) {
+                    name = yItem.getString("name");
+                }
                 //设置Y轴数据
                 Series series = null;
-                if ("C210".equals(type_optional.get(i))) {
+                if ("C210".equals(type_optional.get(i))) {//柱状图
                     series = new Bar(name);
-                } else if ("C220".equals(type_optional.get(i))) {
+                } else if ("C220".equals(type_optional.get(i))) {//折线图
                     series = new Line(name);
                 }
                 //高级计算 cancel:取消percentage:百分比

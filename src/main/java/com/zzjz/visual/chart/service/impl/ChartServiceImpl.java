@@ -56,7 +56,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
     }
 
     @Override
-    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql) {
+    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql, String aggr_filterSql) {
         StringBuffer sql = new StringBuffer("SELECT ");
         //聚合函数字段
         sql.append(aggregator).append(",");
@@ -70,10 +70,18 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
         sql.append(" AS xAxis FROM ").append(tb_id).append(" ");
 
-        if (StringUtils.isNotBlank(filterSql)) {
+        if (StringUtils.isNotBlank(filterSql) || StringUtils.isNotBlank(aggr_filterSql)) {
+            sql.append(" WHERE ");
             //筛选器sql
-            sql.append(" WHERE ").append(filterSql);
+            if (StringUtils.isNotBlank(filterSql)) {
+                sql.append(filterSql);
+            }
+            //结果筛选器sql
+            if (StringUtils.isNotBlank(aggr_filterSql)) {
+                sql.append(aggr_filterSql);
+            }
         }
+
 
         sql.append(" GROUP BY xAxis ORDER BY ");
 
@@ -94,10 +102,11 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
     /**
      * 截取固定行数的sql
+     *
      * @param top 截取参数对象
      * @return
      */
-    private String limitSql(JSONObject top,String sql) {
+    private String limitSql(JSONObject top, String sql) {
         StringBuffer limitSql = new StringBuffer();
         //是否勾选维度显示条目数
         if (top.getBoolean("enabled")) {
