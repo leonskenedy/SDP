@@ -7,10 +7,13 @@
     <script src="${ctx}/js/lib/jquery1.9.min.js"></script>
     <script src="${ctx}/js/lib/jquery.easyui.min.js"></script>
     <script src="${ctx}/js/lib/echarts.js"></script>
+    <script src="${ctx}/js/lib/d3.js"></script>
+    <script src="${ctx}/js/lib/china.js"></script>
     <script src="${ctx}/js/utils.js"></script>
     <link type="text/css" rel="stylesheet" href="${ctx}/css/easyui.css">
     <link type="text/css" rel="stylesheet" href="${ctx}/css/icon.css">
     <link type="text/css" rel="stylesheet" href="${ctx}/css/ui.css">
+    <script src="${ctx}/js/ui/config.js"></script>
     <script src="${ctx}/js/ui/dataFilter.js"></script>
     <script src="${ctx}/js/ui/index.js"></script>
     <style>

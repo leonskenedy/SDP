@@ -141,12 +141,16 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
 .zzjz-chart-type-table{
     background-position: -180px -564px;
 }
-.zzjz-chart-type-table .active{
+.zzjz-chart-type-table-selective{
     background-position: -242px -566px;
+
+}
+.zzjz-chart-type-active{
     background-color: white;
     border: 2px solid;
     border-radius: 4px;
 }
+
 .zzjz-chart-type-card{
     background-position: -300px -504px;
 }
@@ -156,15 +160,15 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
 .zzjz-chart-type-brokenLine{
     background-position: -420px -564px;
 }
+.zzjz-chart-type-brokenLine-selective{
+    background-position: -480px -564px;
+}
 .zzjz-chart-type-column1{
     background-position: -504px -396px;
 }
 
-.zzjz-chart-type-column1-active{
+.zzjz-chart-type-column1-selective{
     background-position: -650px -542px;
-    background-color: white;
-    border: 2px solid;
-    border-radius: 4px;
 }
 .zzjz-chart-type-column2{
     background-position: -648px -420px;
@@ -192,6 +196,9 @@ input[type=checkbox].zzjz-checkbox:checked + .zzjz-label-check{
 }
 .zzjz-chart-type-maparea{
     background-position: -588px -360px;
+}
+.zzjz-chart-type-maparea-selective{
+    background-position: -588px -420px;
 }
 .zzjz-chart-type-mapbubble{
     background-position: -588px -240px;
