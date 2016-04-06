@@ -221,15 +221,7 @@ public class ChartController {
 
         String aggregator = StringUtils.join(aggregatorList, ",");
 
-        //地图设置
-        boolean isMap = false;
-        if(type_optional != null && type_optional.size() == 1 && "C271".equals(type_optional.get(0))){
-            isMap = true;
-        }
-        //地图设置
-
-
-        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql, aggr_filterSql.toString(),start_time, isMap);
+        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql, aggr_filterSql.toString(),start_time);
         List<String> xAxisData = list.get(list.size() - 1);//X轴
 
         Axis xAxis;
