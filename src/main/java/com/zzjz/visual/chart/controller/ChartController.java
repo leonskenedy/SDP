@@ -12,6 +12,7 @@ import com.github.abel533.echarts.json.GsonOption;
 import com.github.abel533.echarts.json.GsonUtil;
 import com.github.abel533.echarts.series.Bar;
 import com.github.abel533.echarts.series.Line;
+import com.github.abel533.echarts.series.Map;
 import com.github.abel533.echarts.series.Series;
 import com.google.common.collect.Lists;
 import com.zzjz.utils.Contants;
@@ -19,6 +20,7 @@ import com.zzjz.utils.DataUtils;
 import com.zzjz.utils.EnhancedOption;
 import com.zzjz.utils.JsonUtils;
 import com.zzjz.visual.chart.service.IChartService;
+import com.zzjz.visual.chart.service.TestService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -38,6 +40,8 @@ public class ChartController {
 
     @Autowired
     private IChartService service;
+    @Autowired
+    private TestService testService;
 
     /**
      * 修改Chart
@@ -293,6 +297,8 @@ public class ChartController {
                     series = new Bar(name);
                 } else if ("C220".equals(type_optional.get(i))) {//折线图
                     series = new Line(name);
+                }else if("C271".equals(type_optional.get(i))){
+                    series = new Map(name);
                 }
                 //高级计算 cancel:取消percentage:百分比
                 JSONObject advance_aggregator = yItem.getJSONObject("advance_aggregator");
@@ -352,9 +358,18 @@ public class ChartController {
                         }
                     }
                 }
-                option.series().add(series);
+                if("C271".equals(type_optional.get(i))){
+                    //series = new Map(name);
+                    //String aa = "bbb";
+                    //testService.resetMapAxis((CategoryAxis) option.xAxis().get(0));
+                    option.series().add(series);
+                }else{
+                    option.series().add(series);
+                }
+
                 //图例在图表下方 默认在上方
                 option.legend().y(Y.bottom).data().add(name);
+
             }
         }
     }

@@ -122,7 +122,9 @@ $(document).ready(function(){
         {column_cn:"日期", column_en:"time", column_type:3},
         {column_cn:"价格（元/公斤）", column_en:"price", column_type:1},
         {column_cn:"类别", column_en:"type", column_type:2},
-        {column_cn:"出售方式", column_en:"selltype", column_type:2}
+        {column_cn:"出售方式", column_en:"selltype", column_type:2},
+        {column_cn:"省/直辖", column_en:"province", column_type:2, map_column: true},
+        {column_cn:"城市", column_en:"city", column_type:2, map_column: true}
     ]
     $("#chart_column_list").datalist({
         valueField: "value",
@@ -131,7 +133,7 @@ $(document).ready(function(){
         textFormatter:function(value,row,index){
             return $("<div></div>").append(
                 $("<div></div>").attr("class", "zzjz-column-div").attr("column_cn", row.column_cn)
-                    .attr("column_en", row.column_en).attr("column_type", row.column_type)
+                    .attr("column_en", row.column_en).attr("column_type", row.column_type).attr("map_column", row.map_column?"true":"")
                     .append($("<span></span>").attr("class", "l-btn-left l-btn-icon-left").append($("<span></span>").attr("class", "l-btn-text").text(row.column_cn))
                         .append($("<span></span>").attr("class", "l-btn-icon icon-data-type-"+row.column_type)))
             ).html();
@@ -197,8 +199,7 @@ $(document).ready(function(){
             })
 
             $(this).removeClass('zzjz-axis-over');
-            resetEChartDiv();
-            gatherData();
+            _chartConfig.addYAxis($("#"+data.id)).resetEChartDiv().drawChart();
         }
     });
 
@@ -209,6 +210,7 @@ $(document).ready(function(){
             //$(source).draggable('options').cursor='auto';
             $(source).draggable('proxy').css('border','1px solid red');
             $(this).addClass('zzjz-axis-over');
+
         },
         onDragLeave:function(e,source){
             //$(source).draggable('options').cursor='not-allowed';
@@ -221,7 +223,8 @@ $(document).ready(function(){
                 column_cn: $(source).attr("column_cn"),
                 column_type: $(source).attr("column_type"),
                 class: "zzjz-axis-item",
-                id: +new Date()
+                id: +new Date(),
+                map_column: $(source).attr("map_column")
             }
             if(data.column_type == "3"){
                 data.granularity = "day"
@@ -248,10 +251,22 @@ $(document).ready(function(){
                     p.appendTo($("body"))
                     return p;
                 }
+            });
+
+            $("#"+data.id).droppable({
+                accept: ".zzjz-column-div",
+                onDrop:function(e,source){
+                    $(".zzjz-xaxis-div").droppable("disable")
+                },
+                onDragEnter:function(e, source){
+                    $(".zzjz-xaxis-div").droppable("disable")
+                },
+                onDragLeave:function(e, source){
+                    $(".zzjz-xaxis-div").droppable("enable")
+                }
             })
             $(this).removeClass('zzjz-axis-over');
-            resetEChartDiv();
-            gatherData();
+            _chartConfig.addXAxis($("#"+data.id), true).resetEChartDiv();
         }
     });
     $('#mm').menu({
@@ -285,13 +300,12 @@ $(document).ready(function(){
                         sort.type = "asc";
                         break;
                 }
-                gatherData();
+                _chartConfig.drawChart();
                 return;
             }
             window._hoverItem.attr("formula", item.name);
             _hoverItem.find(".l-btn-text").text(_hoverItem.attr("column_cn") + " ("+ item.text+")");
-            resetEChartDiv();
-            gatherData();
+            _chartConfig.resetEChartDiv().drawChart();
         },
         onShow: function(){
             $("[formula]").removeClass("zzjz-axis-item-selected");
@@ -334,9 +348,7 @@ $(document).ready(function(){
         text:"降序"
     });
     initXAxisMenu();
-    resetEChartDiv();
-
-
+    _chartConfig.resetEChartDiv();
     $("#value_format_dialog").dialog({
         buttons: [{
             text:'保存',
@@ -362,7 +374,7 @@ $(document).ready(function(){
                     }
                 }
                 $("#value_format_dialog").dialog("close");
-                gatherData()
+                _chartConfig.drawChart();
             }
         },{
             text:'取消',
@@ -428,17 +440,25 @@ $(document).ready(function(){
         $("<div></div>").attr("class", "zzjz-faked-line-bottom")
     ).appendTo($("#"+panelIds.chartEast));
     var chartTypeUl = $(".zzjz-chart-type-ul");
+    var chartTypes = _chartConfig.chartTypes.map(function(t){if(t.classId){return t;}});
     for(var i = 0; i < chartTypes.length; i++){
-        $("<li></li>").append(
-            $("<span></span>").attr("class", "zzjz-chart-type zzjz-chart-type-"+chartTypes[i].typeName)
-        ).appendTo(chartTypeUl);
+        if(chartTypes[i]){
+            $("<li></li>").append(
+                $("<span></span>").attr("class", "zzjz-chart-type zzjz-chart-type-"+chartTypes[i].typeName)
+                    .attr("class_id", chartTypes[i].classId).attr("original_class", "zzjz-chart-type-"+chartTypes[i].typeName)
+            ).appendTo(chartTypeUl);
+        }
     };
 
     $(".zzjz-chart-type").bind("click", function(){
-        if($(this).hasClass("active")){
-            $(this).removeClass("active")
-        }else{
-            $(this).addClass("active")
+        if($(this).hasClass("zzjz-chart-type-active")){
+            return;
+        }
+        if($(this).hasClass($(this).attr("original_class")+"-selective")){
+            $("span[class_id]").removeClass("zzjz-chart-type-active");
+            $(this).addClass("zzjz-chart-type-active");
+            chart.meta.level[0].chart_type = $(this).attr("class_id");
+            _chartConfig.drawChart();
         }
     })
 
@@ -533,7 +553,7 @@ $(document).ready(function(){
                             return "<div>" + div.html() + "</div>";
                         }
                     });
-                    gatherData();
+                    _chartConfig.drawChart();
                     $("#chart_subline_dialog").dialog("close");
                 }
             },{
@@ -572,7 +592,7 @@ $(document).ready(function(){
                 case "percent": item.type = "percent";break;
                 case "items": item.type = "items";break;
             }
-            gatherData();
+            _chartConfig.drawChart();
         }
     });
     $('#limit_spinner').numberspinner({
@@ -638,75 +658,13 @@ $(document).ready(function(){
         onDragLeave:function(e,source){
             $(source).draggable('proxy').css("color", "").find(".l-btn-text").css('text-decoration','none');
         },onDrop:function(e,source){
-            $(source).remove();
+            _chartConfig.removeAxis(source).resetEChartDiv();
             setTimeout(function(){
-                resetEChartDiv();
-                gatherData();
+                _chartConfig.drawChart();
             }, 1000)
         }
     });
 });
-
-function resetEChartDiv(){
-    $(".zzjz-echart-div").height($(".zzjz-echart-div").parent().height() - $(".zzjz-axis-div").height());
-}
-function gatherData(){
-    chart.meta.level[0].y = [];
-    chart.meta.level[0].x = [];
-    $(".zzjz-yaxis-div .zzjz-axis-item").each(function(){
-        chart.meta.level[0].y.push({
-            name: $(this).attr("column_cn"),
-            data_type: dataType[$(this).attr("column_type")],
-            aggregator: $(this).attr("formula"),
-            aggregator_name: aggregatorName[$(this).attr("formula")],
-            is_new:false,
-            uniq_id: $(this).attr("id"),
-            fid: $(this).attr("column_en"),
-            is_build_aggregated: 0,
-            formatter: {
-                check: $(this).attr("check") ? $(this).attr("check") : "num",
-                num:{
-                    digit:$(this).attr("d-digit")?$(this).attr("d-digit")*1 : 0,
-                    millesimal: $(this).attr("millesimal")? true: false
-                },
-                percent:{
-                    digit:$(this).attr("p-digit") ? $(this).attr("p-digit")*1 : 0
-                }
-            },
-            alias_name: $(this).text()/*,
-             advance_aggregator: {
-             type: "percentage"
-             }*/
-        })
-    });
-
-    $(".zzjz-xaxis-div .zzjz-axis-item").each(function(){
-        chart.meta.level[0].x.push({
-            name: $(this).attr("column_cn"),
-            data_type: dataType[$(this).attr("column_type")],
-            is_new:false,
-            fid: $(this).attr("column_en"),
-            granularity: $(this).attr("granularity")? $(this).attr("granularity"): "day",
-            is_build_aggregated: 0
-        })
-    })
-    $.ajax({
-        url: "../chart/update",
-        type:"post",
-        data:encodeURIComponent(JSON.stringify(chart)),
-        dataType:"json",
-        success:function(data){
-            try{
-                echart.dispose($(".zzjz-echart-div-right")[0]);
-            }catch (e){
-
-            }
-            echart = echarts.init($(".zzjz-echart-div-right")[0]);
-            console.log(eval("("+data.option+")"))
-            echart.setOption(eval("("+data.option+")"));
-        }
-    })
-}
 var echart = null;
 var dataType = {
     "1":"number","2":"string","3":"date"
@@ -744,43 +702,43 @@ var chart = {
                 },
                 "guide_line": [],
                 "y": [
-                    {
-                        "name": "价格（元/公斤）",
-                        "data_type": "number",
-                        "aggregator": "COUNT_DISTINCT",
-                        "aggregator_name": "去重计数",
-                        "is_new": false,
-                        "uniq_id": 1457575285931,
-                        "fid": "price",
-                        "is_build_aggregated": 0,
-                        "formatter": "",
-                        "alias_name": "价格（元/公斤）(去重计数)"
-                    },
-                    {
-                        "fid": "price",
-                        "uniq_id": 1457584118006,
-                        "name": "价格（元/公斤）",
-                        "data_type": "number",
-                        "is_new": false,
-                        "is_build_aggregated": 0,
-                        "aggregator": "SUM",
-                        "aggregator_name": "求和",
-                        "formatter": ""
-                    }
+//                    {
+//                        "name": "价格（元/公斤）",
+//                        "data_type": "number",
+//                        "aggregator": "COUNT_DISTINCT",
+//                        "aggregator_name": "去重计数",
+//                        "is_new": false,
+//                        "uniq_id": 1457575285931,
+//                        "fid": "price",
+//                        "is_build_aggregated": 0,
+//                        "formatter": "",
+//                        "alias_name": "价格（元/公斤）(去重计数)"
+//                    },
+//                    {
+//                        "fid": "price",
+//                        "uniq_id": 1457584118006,
+//                        "name": "价格（元/公斤）",
+//                        "data_type": "number",
+//                        "is_new": false,
+//                        "is_build_aggregated": 0,
+//                        "aggregator": "SUM",
+//                        "aggregator_name": "求和",
+//                        "formatter": ""
+//                    }
                 ],
                 "title_formula": "AVERAGE",
                 "chart_type": "C210",
                 "yaxis_min": 0,
                 "yaxis_min_disabled": true,
                 "x": [
-                    {
-                        "name": "类别",
-                        "data_type": "string",
-                        "is_new": false,
-                        "fid": "type",
-                        "granularity": "day",
-                        "is_build_aggregated": 0
-                    }
+//                    {
+//                        "name": "类别",
+//                        "data_type": "string",
+//                        "is_new": false,
+//                        "fid": "type",
+//                        "granularity": "day",
+//                        "is_build_aggregated": 0
+//                    }
                 ],
                 "yaxis_name": "价格（元/公斤）A"
             }
@@ -854,28 +812,7 @@ function initXAxisMenu(){
 }
 
 
-var chartTypes = [
-    {"id":1, "name":"表格", "typeName":"table"},
-    {"id":2, "name":"指标卡", "typeName":"card"},
-    {"id":3, "name":"计量图", "typeName":"metering"},
-    {"id":4, "name":"折线图", "typeName":"brokenLine"},
-    {"id":5, "name":"簇状柱型图", "typeName":"column1"},
-    {"id":6, "name":"堆积柱型图", "typeName":"column2"},
-    {"id":7, "name":"百分比柱型图", "typeName":"column3"},
-    {"id":8, "name":"瀑布图", "typeName":"waterfall"},
-    {"id":9, "name":"条形图", "typeName":"bar"},
-    {"id":10, "name":"堆积条形图", "typeName":"bar2"},
-    {"id":11, "name":"百分比形图", "typeName":"bar3"},
-    {"id":12, "name":"桑基图", "typeName":"sankey"},
-    {"id":13, "name":"饼图", "typeName":"pie"},
-    {"id":14, "name":"地图(面积)", "typeName":"maparea"},
-    {"id":15, "name":"地图(气泡)", "typeName":"mapbubble"},
-    {"id":16, "name":"雷达图", "typeName":"radar"},
-    {"id":17, "name":"双轴图", "typeName":"dualaxis"},
-    {"id":18, "name":"散点图", "typeName":"discrete"},
-    {"id":19, "name":"漏斗图", "typeName":"dropdown"},
-    {"id":20, "name":"云词", "typeName":"cloud"}
-]
+
 
 
 function setupSubline(id){
