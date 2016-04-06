@@ -95,8 +95,6 @@ function tooltipFormatter(params, yAxis) {
     var res;
     if (params instanceof Array) {
         if (params[0].value&&params[0].value instanceof Array) {//时间轴提示
-            console.log(params)
-            console.log(params)
             var date =new Date(params[0].name);
             var dateStr = date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() +"日";
             res = '<span style="color: black">' + dateStr + '</span>';
