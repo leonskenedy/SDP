@@ -571,7 +571,7 @@ $(document).ready(function(){
             .append($("<input type='checkbox' id='limit_check' class='zzjz-checkbox' />"))
             .append($("<label class='zzjz-label-check'></label>").text("维度条件显示").attr("for", "limit_check"))
     ).append(
-        $("<div id='limit_num_operate_div' style='display: none'></div>").append(
+        $("<div id='limit_num_operate_div' style='display: none;margin: 5px'></div>").append(
             $("<select id='limit_type'></select>").append($("<option selected></option>").text("前").attr("value", "forward"))
                 .append($("<option></option>").text("后").attr("value", "backward"))
         ).append($("<input id='limit_spinner' />")).append(
@@ -611,8 +611,47 @@ $(document).ready(function(){
             chart.meta.level[0].top.enabled = false;
         }
     });
-    
-    
+    //动态折线
+    $("<div style='position: relative'></div>").attr("id", "dynamic_line_div").append(
+        $("<div></div>").attr("class", "zzjz-title-div")
+            .append($("<input type='checkbox' id='dynamic_check' class='zzjz-checkbox' />"))
+            .append($("<label class='zzjz-label-check'></label>").text("动态显示").attr("for", "dynamic_check"))
+    ).append(
+        $("<div id='dynamic_line_operate_div' style='display: none;'></div>").append(
+            $("<div style='margin: 5px'><span>起始:</span><input id='dynamic_start' class='zzjz-dynamic-date' /></div>")
+        ).append(
+            $("<div style='margin: 5px'><span>结束:</span><input id='dynamic_end' class='zzjz-dynamic-date' /></div>")
+        )
+    ).append($("<div style='height: 10px'></div>")).append(
+        $("<div></div>").attr("class", "zzjz-faked-line-bottom")
+    ).appendTo($("#"+panelIds.chartEast));
+    var timeFormat = d3.time.format("%Y-%m-%d %H:%M:%S")
+
+    $("#dynamic_line_div").find(".zzjz-dynamic-date").datetimebox({
+        formatter:function (date){
+            return timeFormat(date);
+        },
+        parser:function(s){
+            if (!s) return new Date();
+            return new Date(Date.parse(s));
+        },
+        showSeconds: true,
+        width:150
+    });
+    $("#dynamic_check").bind("change", function(){
+        if($(this).prop("checked")){
+            $("#dynamic_line_operate_div").show();
+            var now = new Date();
+            now.setTime(now.getTime() - 24*60*60*1000);
+            $("#dynamic_start").datetimebox("setValue", now);
+            now.setTime(now.getTime() + 24*60*60*1000);
+            $("#dynamic_end").datetimebox("setValue", new Date());
+            chart.meta.level[0].auto_flush = true;
+        }else{
+            $("#dynamic_line_operate_div").hide()
+            chart.meta.level[0].auto_flush = false;
+        }
+    });
     $(".zzjz-echart-div").append(
         $("<div class='zzjz-echart-div-left' style='position: absolute;left: 0px;top:0px;bottom: 0px;width: 200px;border-right: 1px solid #95B8E7;'></div>")
     ).append(
@@ -664,6 +703,8 @@ $(document).ready(function(){
             }, 1000)
         }
     });
+
+
 });
 var echart = null;
 var dataType = {

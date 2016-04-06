@@ -163,6 +163,9 @@ var _chartConfig = {
                 echart = echarts.init($(".zzjz-echart-div-right")[0]);
                 if(chart.meta.level[0].chart_type == "C271"){
                     echart.setOption(_chartConfig.parseMap(option));
+                }else if(chart.meta.level[0].auto_flush){
+                    seriesFormat(option.series);
+                    timeTicket(3000);
                 }else{
                     echart.setOption(option);
                 }
@@ -245,4 +248,46 @@ var _chartConfig = {
         this.parseType();
         return this;
     }
+};
+
+var seriesTotal = [];
+
+function seriesFormat(series) {
+    $.each(series, function (i) {
+        var seriesData = this;
+        $.each(seriesData.data, function (j) {
+            this.name = new Date(this.name);
+            this.value[0] = this.name;
+            if (i == series.length - 1 && j == seriesData.data.length - 1) {
+                chart.meta.level[0].last_time = this.name;
+            }
+        });
+        seriesTotal[i].data.push(seriesData.data);
+    });
 }
+function timeTicket(time) {
+    setInterval(function () {
+        $.each(seriesTotal, function () {
+            for (var i = 0; i < 5; i++) {
+                this.data.shift();
+            }
+            var itemChart = chart;
+            itemChart.meta.level[0].start_time = this.data[this.data.length - 1][0];
+            $.ajax({
+                url: "../chart/update",
+                type: "post",
+                data: encodeURIComponent(JSON.stringify(itemChart)),
+                dataType: "json",
+                success: function (data) {
+                    var itemOption = ("(" + data.option + ")");
+                    seriesFormat(itemOption);
+                }
+            });
+
+        });
+        echart.setOption({
+            series: seriesTotal
+        });
+    }, time);
+}
+
