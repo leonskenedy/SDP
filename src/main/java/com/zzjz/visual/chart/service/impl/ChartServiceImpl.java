@@ -28,21 +28,24 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
 
     @Override
-    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql, String aggr_filterSql) {
+    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql, String aggr_filterSql, String last_time) {
         StringBuffer sql = new StringBuffer("SELECT ");
         //聚合函数字段
         sql.append(aggregator).append(",");
+        String group;
         if (granularity_type != null) {
             //自定义时间分组查询
-            sql.append(customGroupTimeSql(xFid, granularity_type));
+            group = customGroupTimeSql(xFid, granularity_type);
         } else {
             //常规分组查询
-            sql.append(groupSql(xFid, granularity));
+            group = groupSql(xFid, granularity);
         }
+
+        sql.append(group);
 
         sql.append(" AS xAxis FROM ").append(tb_id).append(" ");
 
-        if (StringUtils.isNotBlank(filterSql) || StringUtils.isNotBlank(aggr_filterSql)) {
+        if (StringUtils.isNotBlank(filterSql) || StringUtils.isNotBlank(aggr_filterSql) || StringUtils.isNotBlank(last_time)) {
             sql.append(" WHERE ");
             //筛选器sql
             if (StringUtils.isNotBlank(filterSql)) {
@@ -51,6 +54,10 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             //结果筛选器sql
             if (StringUtils.isNotBlank(aggr_filterSql)) {
                 sql.append(aggr_filterSql);
+            }
+            //自动刷新最后刷新时间
+            if (StringUtils.isNotBlank(last_time) && (StringUtils.isNotBlank(filterSql) || StringUtils.isNotBlank(aggr_filterSql))) {
+                sql.append(" AND ").append(group).append(">").append(last_time);
             }
         }
 

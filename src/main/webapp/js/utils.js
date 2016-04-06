@@ -93,36 +93,70 @@ function newline(option, number, axis) {
  */
 function tooltipFormatter(params, yAxis) {
     var res;
-    console.log(params)
-    console.log(eval(yAxis))
-    if (params instanceof Array) {//柱子提示
-        res = '<span style="color: black">' + params[0].name + '</span>';
-        yAxis = eval(yAxis);
-        $.each(yAxis, function (index) {
-            var name = this.nick_name&&$.trim(this.nick_name)!="" ? this.nick_name : params[index].seriesName;
+    if (params instanceof Array) {
+        if (params[0].value&&params[0].value instanceof Array) {//时间轴提示
+            console.log(params)
+            console.log(params)
+            var date =new Date(params[0].name);
+            var dateStr = date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() +"日";
+            res = '<span style="color: black">' + dateStr + '</span>';
+            yAxis = eval(yAxis);
+            $.each(yAxis, function (index) {
+                var name = this.nick_name && $.trim(this.nick_name) != "" ? this.nick_name : params[index].seriesName;
 
-            res += '<br/><span style="font-weight:bold;color: ' + params[index].color + '">' + name + ' : ';
-            var formatter = this.formatter;
-            if (formatter.check == "num") {//数值
-                var num = formatter.num;
-                var digit = num.digit;//精度
-                if (num.millesimal) {//使用千分位分隔符
-                    res += formatNumber(params[index].value, digit, 1);
-                } else {
-                    res += formatNumber(params[index].value, digit, 0);
+                res += '<br/><span style="font-weight:bold;color: ' + params[index].color + '">' + name + ' : ';
+                var  valArr = params[index].value;
+                var formatter = this.formatter;
+                if (formatter.check == "num") {//数值
+                    var num = formatter.num;
+                    var digit = num.digit;//精度
+                    if (num.millesimal) {//使用千分位分隔符
+                        res += formatNumber(valArr[1], digit, 1);
+                    } else {
+                        res += formatNumber(valArr[1], digit, 0);
+                    }
+
+                } else if (formatter.check == "percent") {
+                    var percent = formatter.percent;
+                    var digit = percent.digit;
+                    res += formatNumber(valArr[1], digit, 2);
                 }
+                var unit_adv = this.unit_adv;//字段单位
+                if (unit_adv && $.trim(unit_adv) != "") {
+                    res += unit_adv;
+                }
+                res += "</span>";
+            });
 
-            } else if (formatter.check == "percent") {
-                var percent = formatter.percent;
-                var digit = percent.digit;
-                res += formatNumber(params[index].value, digit, 2);
-            }
-            var unit_adv = this.unit_adv;//字段单位
-            if(unit_adv&& $.trim(unit_adv)!=""){
-                res+=unit_adv;
-            }
-            res += "</span>";
-        });
+        } else {//柱子提示
+            res = '<span style="color: black">' + params[0].name + '</span>';
+            yAxis = eval(yAxis);
+            $.each(yAxis, function (index) {
+                var name = this.nick_name && $.trim(this.nick_name) != "" ? this.nick_name : params[index].seriesName;
+
+                res += '<br/><span style="font-weight:bold;color: ' + params[index].color + '">' + name + ' : ';
+                var formatter = this.formatter;
+                if (formatter.check == "num") {//数值
+                    var num = formatter.num;
+                    var digit = num.digit;//精度
+                    if (num.millesimal) {//使用千分位分隔符
+                        res += formatNumber(params[index].value, digit, 1);
+                    } else {
+                        res += formatNumber(params[index].value, digit, 0);
+                    }
+
+                } else if (formatter.check == "percent") {
+                    var percent = formatter.percent;
+                    var digit = percent.digit;
+                    res += formatNumber(params[index].value, digit, 2);
+                }
+                var unit_adv = this.unit_adv;//字段单位
+                if (unit_adv && $.trim(unit_adv) != "") {
+                    res += unit_adv;
+                }
+                res += "</span>";
+            });
+        }
     } else {//辅助线提示
         res = '<span style="color: black">';
         if (params.data  instanceof Array) {

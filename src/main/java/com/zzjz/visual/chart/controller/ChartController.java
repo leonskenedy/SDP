@@ -4,10 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.abel533.echarts.AxisPointer;
 import com.github.abel533.echarts.Grid;
-import com.github.abel533.echarts.axis.AxisLabel;
-import com.github.abel533.echarts.axis.CategoryAxis;
-import com.github.abel533.echarts.axis.SplitLine;
-import com.github.abel533.echarts.axis.ValueAxis;
+import com.github.abel533.echarts.axis.*;
 import com.github.abel533.echarts.code.*;
 import com.github.abel533.echarts.data.PointData;
 import com.github.abel533.echarts.feature.MagicType;
@@ -18,6 +15,7 @@ import com.github.abel533.echarts.series.Line;
 import com.github.abel533.echarts.series.Series;
 import com.google.common.collect.Lists;
 import com.zzjz.utils.Contants;
+import com.zzjz.utils.DataUtils;
 import com.zzjz.utils.EnhancedOption;
 import com.zzjz.utils.JsonUtils;
 import com.zzjz.visual.chart.service.IChartService;
@@ -26,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -57,7 +54,8 @@ public class ChartController {
         JSONObject json = null;
         try {
             json = (JSONObject) JSONObject.parse(java.net.URLDecoder.decode(jsonString, "utf-8").replaceAll("=$", ""));
-        } catch (UnsupportedEncodingException e) {
+//            json = (JSONObject) JSONObject.parse(jsonString);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         //图表ID
@@ -82,7 +80,7 @@ public class ChartController {
         //循环层级对应的xy轴信息
         for (int i = 0; i < level.size(); i++) {
             GsonOption option = new EnhancedOption();
-
+//            option.timeline();
             //设置主标题，主标题居中
             option.title().text(json.getString("name")).x(X.center);
 //            option.title().text(json.getString("name"));
@@ -141,6 +139,13 @@ public class ChartController {
         //排序
         JSONObject sort = item.getJSONObject("sort");
 
+        //是否自定刷新时间轴有效
+        Boolean auto_flush = item.getBoolean("auto_flush") == null ? false : item.getBoolean("auto_flush");
+//        Boolean auto_flush = true;
+        //自动刷新开始时间
+        String start_time = item.getString("start_time");
+
+
         //结果最大最小值筛选器
         StringBuffer aggr_filterSql = new StringBuffer();
 
@@ -182,7 +187,7 @@ public class ChartController {
                 if (aggr_filter != null) {
                     String max = aggr_filter.getString("max");
                     String min = aggr_filter.getString("min");
-                    if (StringUtils.isNotBlank(aggr_filterSql)) {
+                    if (StringUtils.isNotBlank(filterSql)) {
                         aggr_filterSql.append(" AND ");
                     }
                     if (StringUtils.isNotBlank(max)) {
@@ -212,14 +217,21 @@ public class ChartController {
 
         String aggregator = StringUtils.join(aggregatorList, ",");
 
-        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql,aggr_filterSql.toString());
-        List<String> xAxis = list.get(list.size() - 1);//X轴
-        CategoryAxis categoryAxis = new CategoryAxis().data(xAxis.toArray()).splitLine(new SplitLine().show(false));
-        if (xAxis.size() > 8) {
-            categoryAxis.axisLabel(new AxisLabel().rotate(45).interval(0));
+        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql, aggr_filterSql.toString(),start_time);
+        List<String> xAxisData = list.get(list.size() - 1);//X轴
+
+        Axis xAxis;
+        //自动刷新X轴使用时间轴
+        if (auto_flush) {
+            xAxis = new TimeAxis().splitLine(new SplitLine().show(false));
+        } else {//X轴默认为类目轴
+            xAxis = new CategoryAxis().data(xAxisData.toArray()).splitLine(new SplitLine().show(false));
+        }
+        if (xAxisData.size() > 8) {
+            xAxis.axisLabel(new AxisLabel().rotate(45).interval(0));
         }
 
-        option.xAxis().add(categoryAxis);
+        option.xAxis().add(xAxis);
         for (int i = 0; i < type_optional.size(); i++) {
             String yaxis_name = null;
             String yaxis_unit = null;
@@ -288,7 +300,17 @@ public class ChartController {
                 if (advance_aggregator != null && Contants.ADV_AGG_TYPE_PERCENTAGE.equals(advance_aggregator.getString("type"))) {
                     series.data(service.percentage(list.get(j)).toArray());
                 } else {
-                    series.data(list.get(j).toArray());
+                    if (auto_flush) {
+                        for (int k = 0; k < list.get(j).size(); k++) {
+                            JSONObject json = new JSONObject();
+//                            json.put("name", xAxisData.get(k));
+                            json.put("name", DataUtils.parseDate(xAxisData.get(k),DataUtils.date_sdf_wz).getTime());
+                            json.put("value", new Object[]{xAxisData.get(k), list.get(j).get(k)});
+                            series.data().add(json);
+                        }
+                    } else {
+                        series.data(list.get(j).toArray());
+                    }
                 }
 
                 for (int z = 0; z < guide_lineArr.size(); z++) {
@@ -307,10 +329,10 @@ public class ChartController {
                             coordStart.put("name", value);
                             coordStart.put("realName", guide_linName);
                             //x,y轴
-                            coordStart.put("coord", new Object[]{xAxis.get(0), value});
+                            coordStart.put("coord", new Object[]{xAxisData.get(0), value});
                             //终点
                             JSONObject coordStop = new JSONObject();
-                            coordStop.put("coord", new Object[]{xAxis.get(xAxis.size() - 1), value});
+                            coordStop.put("coord", new Object[]{xAxisData.get(xAxisData.size() - 1), value});
                             coordArray.add(coordStart);
                             coordArray.add(coordStop);
                             series.markLine().data(coordArray);
