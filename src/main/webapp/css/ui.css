@@ -34,7 +34,7 @@
     cursor: move;
     width: 150px;
 }
-.zzjz-xaxis-div, .zzjz-yaxis-div{
+.zzjz-xaxis-div, .zzjz-yaxis-div, .zzjz-level-div{
     padding: 5px 0px 5px 0px;
     position: relative;
 }
@@ -45,6 +45,13 @@
 .zzjz-axis-item, .zzjz-axis-item:hover{
     min-width: 95px;
     background-color: cornflowerblue;
+    -webkit-border-radius: 0;
+    border-radius:0;
+    margin: 5px 10px 5px 10px;
+}
+.zzjz-level-item, .zzjz-level-item:hover{
+    background-color: bisque;
+    min-width: 95px;
     -webkit-border-radius: 0;
     border-radius:0;
     margin: 5px 10px 5px 10px;

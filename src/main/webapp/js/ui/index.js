@@ -49,6 +49,7 @@ $(document).ready(function(){
         $("<div class='zzjz-faked-line-left'></div>")
     ).append(
         $("<div></div>").attr("class", "zzjz-axis-div")
+            .append($("<div style='display: none'></div>").attr("class", "zzjz-level-div"))
             .append($("<div></div>").attr("class", "zzjz-xaxis-div"))
             .append($("<div></div>").attr("class", "zzjz-yaxis-div"))
     );
@@ -57,6 +58,11 @@ $(document).ready(function(){
     );
 
     //resetEChartDiv();
+    $("<div class='zzjz-faked-line-bottom'></div>").appendTo($(".zzjz-level-div"))
+    $("<a></a>").attr("class", "zzjz-axis-leader").linkbutton({
+        plain:true,
+        text: "层级"
+    }).appendTo($(".zzjz-level-div"));
     $("<div class='zzjz-faked-line-bottom'></div>").appendTo($(".zzjz-xaxis-div"))
     $("<a></a>").attr("class", "zzjz-axis-leader").linkbutton({
         plain:true,
@@ -207,17 +213,25 @@ $(document).ready(function(){
     $(".zzjz-xaxis-div").droppable({
         accept: ".zzjz-column-div",
         onDragEnter:function(e,source){
-            //$(source).draggable('options').cursor='auto';
             $(source).draggable('proxy').css('border','1px solid red');
             $(this).addClass('zzjz-axis-over');
 
         },
+        onDragOver:function(e, source){
+            $(source).draggable('proxy').css('border','1px solid red');
+            $(this).addClass('zzjz-axis-over');
+        },
         onDragLeave:function(e,source){
-            //$(source).draggable('options').cursor='not-allowed';
             $(source).draggable('proxy').css('border','1px solid #ccc');
             $(this).removeClass('zzjz-axis-over');
         },
         onDrop:function(e,source){
+            if(window._dropped){
+                window._dropped = false;
+                return;
+            }else{
+                window._dropped = false;
+            }
             var data = {
                 column_en: $(source).attr("column_en"),
                 column_cn: $(source).attr("column_cn"),
@@ -256,13 +270,56 @@ $(document).ready(function(){
             $("#"+data.id).droppable({
                 accept: ".zzjz-column-div",
                 onDrop:function(e,source){
-                    $(".zzjz-xaxis-div").droppable("disable")
+                    $(".zzjz-xaxis-div").droppable("enable");
+                    $(".zzjz-xaxis-div").removeClass('zzjz-axis-over');
+                    var data = {
+                        column_en: $(this).attr("column_en"),
+                        column_cn: $(this).attr("column_cn"),
+                        column_type: $(this).attr("column_type"),
+                        class: "zzjz-level-item",
+                        id: _chartConfig.generateId(),
+                        map_column: $(this).attr("map_column")
+                    }
+                    var axisItem = $("<a></a>");
+                    for(var prop in data){
+                        axisItem.attr(prop, data[prop]);
+                    }
+                    $(".zzjz-level-div").append(axisItem);
+                    $("#"+data.id).menubutton({
+                        plain: true,
+                        text: data.column_cn,
+                        hasDownArrow: false
+                    });
+                    data = {
+                        column_en: $(source).attr("column_en"),
+                        column_cn: $(source).attr("column_cn"),
+                        column_type: $(source).attr("column_type"),
+                        class: "zzjz-level-item",
+                        id: _chartConfig.generateId(),
+                        map_column: $(source).attr("map_column")
+                    }
+                    axisItem = $("<a></a>");
+                    for(var prop in data){
+                        axisItem.attr(prop, data[prop]);
+                    }
+                    $(".zzjz-level-div").append($("<span></span>").text(">"));
+                    $(".zzjz-level-div").append(axisItem);
+                    $("#"+data.id).menubutton({
+                        plain: true,
+                        text: data.column_cn,
+                        hasDownArrow: false
+                    });
+                    $(".zzjz-level-div").show();
+                    _chartConfig.resetEChartDiv();
+                    window._dropped = true;
                 },
                 onDragEnter:function(e, source){
                     $(".zzjz-xaxis-div").droppable("disable")
+                    $(".zzjz-xaxis-div").addClass('zzjz-axis-over');
                 },
                 onDragLeave:function(e, source){
-                    $(".zzjz-xaxis-div").droppable("enable")
+                    $(".zzjz-xaxis-div").droppable("enable");
+                    $(".zzjz-xaxis-div").addClass('zzjz-axis-over');
                 }
             })
             $(this).removeClass('zzjz-axis-over');
