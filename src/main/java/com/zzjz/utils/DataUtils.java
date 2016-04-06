@@ -518,8 +518,13 @@ public class DataUtils extends PropertyEditorSupport {
 	 * @return 如果转换成功则返回转换后的日期
 	 * @throws ParseException
 	 */
-	public static Date parseDate(String src, String pattern) throws ParseException {
-		return getSDFormat(pattern).parse(src);
+	public static Date parseDate(String src, String pattern)  {
+		try {
+			return getSDFormat(pattern).parse(src);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return null;
 
 	}
 
