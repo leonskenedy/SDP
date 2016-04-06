@@ -29,20 +29,13 @@ var _chartConfig = {
     },
     parseMap: function (option) {
         var mapData = [];
-        var cached = {};
         for (var i = 0; i < option.xAxis[0].data.length; i++) {
             var item = {
                 name: option.xAxis[0].data[i].replace(/(省|市)$/, ""),
                 value: option.series[0].data[i]
             };
-            if (cached[item.name]) {
-                cached[item.name].value += item.value;
-            } else {
-                mapData.push(item);
-                cached[item.name] = item;
-            }
+            mapData.push(item);
         }
-        debugger;
         var mapOption = {
             title: {
                 text: option.title.text,
@@ -249,6 +242,32 @@ var _chartConfig = {
             this.drawChart();
         }
         this.parseType();
+        return this;
+    },
+    updateYAxis:function(jEle, refresh){
+        var item = null;
+        var targetId = $(jEle).attr("id");
+        var items = chart.meta.level[0].y;
+        for(var i = 0; i < items.length; i++){
+            if(items[i].uniq_id == targetId){
+                item = items[i];
+            }
+        }
+        item.aggregator = $(jEle).attr("formula");
+        item.aggregator_name = aggregatorName[$(jEle).attr("formula")];
+        item.formatter = {
+            check: $(jEle).attr("check") ? $(jEle).attr("check") : "num",
+            num: {
+                digit: $(jEle).attr("d-digit") ? $(jEle).attr("d-digit") * 1 : 0,
+                millesimal: $(jEle).attr("millesimal") ? true : false
+            },
+            percent: {
+                digit: $(jEle).attr("p-digit") ? $(jEle).attr("p-digit") * 1 : 0
+            }
+        }
+        if(refresh){
+            this.drawChart();
+        }
         return this;
     }
 };

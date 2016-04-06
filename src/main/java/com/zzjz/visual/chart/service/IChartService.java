@@ -30,9 +30,10 @@ public interface IChartService extends CommonService {
      * @param s
      * @param toString
      * @param start_time
+     * @param isMap
      * @return 返回分组查询的字段的数据集合, 多个字段就是多个集合
      */
-    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name, JSONObject top, String sort, String s, String toString, String start_time);
+    List<List<String>> getGroupArrayList(String tb_id, String xFid, String yFid, String granularity, JSONObject granularity_name, JSONObject top, String sort, String s, String toString, String start_time, boolean isMap);
 
     /**
      * 高级计算百分比

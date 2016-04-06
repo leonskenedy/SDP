@@ -28,7 +28,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
 
     @Override
-    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql, String aggr_filterSql, String last_time) {
+    public List<List<String>> getGroupArrayList(String tb_id, String xFid, String aggregator, String granularity, JSONObject granularity_type, JSONObject top, String sortFid, String filterSql, String aggr_filterSql, String last_time, boolean isMap) {
         StringBuffer sql = new StringBuffer("SELECT ");
         //聚合函数字段
         sql.append(aggregator).append(",");
@@ -38,7 +38,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             group = customGroupTimeSql(xFid, granularity_type);
         } else {
             //常规分组查询
-            group = groupSql(xFid, granularity);
+            group = groupSql(xFid, granularity, isMap);
         }
 
         sql.append(group);
@@ -453,7 +453,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
      * @param granularity 时间类型
      * @return
      */
-    private String groupSql(String xFid, String granularity) {
+    private String groupSql(String xFid, String granularity, boolean isMap) {
         StringBuffer sql = new StringBuffer(200);
         //日期类型统计粒度
         //年
@@ -507,7 +507,11 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             sql.append(xFid);
             sql.append(",'%Y年%c月%e日 %H时%i分%S秒')");
         } else {//非时间分组查询
-            sql.append(xFid);
+            if(isMap){
+                sql.append("parseMap(").append(xFid).append(")");
+            }else{
+                sql.append(xFid);
+            }
         }
         return sql.toString();
     }

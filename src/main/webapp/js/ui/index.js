@@ -305,7 +305,7 @@ $(document).ready(function(){
             }
             window._hoverItem.attr("formula", item.name);
             _hoverItem.find(".l-btn-text").text(_hoverItem.attr("column_cn") + " ("+ item.text+")");
-            _chartConfig.resetEChartDiv().drawChart();
+            _chartConfig.updateYAxis(_hoverItem, true);
         },
         onShow: function(){
             $("[formula]").removeClass("zzjz-axis-item-selected");
