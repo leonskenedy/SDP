@@ -76,6 +76,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
 
 
         List<List<String>> list = getArrayList(sql.toString());
+        System.out.println(sql);
         return list;
     }
 
@@ -470,7 +471,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         } else if (Contants.GRANULARITY_TYPE_MONTH.equals(granularity)) {
             sql.append("DATE_FORMAT(");
             sql.append(xFid);
-            sql.append(", '%Y年%c月')");
+            sql.append(", '%Y年%m月')");
             //周
         } else if (Contants.GRANULARITY_TYPE_WEEK.equals(granularity)) {
             sql.append("CONCAT(YEAR (");
@@ -481,31 +482,31 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             sql.append(xFid);
             sql.append("INTERVAL - DAYOFweek(");
             sql.append(xFid);
-            sql.append(") + 2 DAY),'%c/%e'),'~',DATE_FORMAT(date_add(");
+            sql.append(") + 2 DAY),'%m/%d'),'~',DATE_FORMAT(date_add(");
             sql.append(xFid);
             sql.append(",INTERVAL 7 - DAYOFweek(");
             sql.append(xFid);
-            sql.append(") + 1 DAY),'%c/%e）'))");
+            sql.append(") + 1 DAY),'%m/%d）'))");
             //天
         } else if (Contants.GRANULARITY_TYPE_DAY.equals(granularity)) {
             sql.append("DATE_FORMAT(");
             sql.append(xFid);
-            sql.append(", '%Y年%c月%e日')");
+            sql.append(", '%Y年%m月%d日')");
             //时
         } else if (Contants.GRANULARITY_TYPE_HOUR.equals(granularity)) {
             sql.append("DATE_FORMAT(");
             sql.append(xFid);
-            sql.append(",'%Y年%c月%e日 %H时')");
+            sql.append(",'%Y年%m月%d日 %H时')");
             //分
         } else if (Contants.GRANULARITY_TYPE_MINUTE.equals(granularity)) {
             sql.append("DATE_FORMAT(");
             sql.append(xFid);
-            sql.append(",'%Y年%c月%e日 %H时%i分')");
+            sql.append(",'%Y年%m月%d日 %H时%i分')");
             //秒
         } else if (Contants.GRANULARITY_TYPE_SECOND.equals(granularity)) {
             sql.append("DATE_FORMAT(");
             sql.append(xFid);
-            sql.append(",'%Y年%c月%e日 %H时%i分%S秒')");
+            sql.append(",'%Y年%m月%d日 %H时%i分%S秒')");
         } else {//非时间分组查询
             sql.append(xFid);
         }
@@ -544,12 +545,12 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
         } else {
             sql.append("CASE WHEN ");
             sql.append(xFid);
-            sql.append("> DATE_FORMAT(time, '%Y-%c-");
+            sql.append("> DATE_FORMAT(time, '%Y-%m-");
             sql.append(granularity_type.getInteger("day"));
             sql.append("')");
             sql.append("THEN DATE_FORMAT(");
             sql.append(xFid);
-            sql.append(", '%Y年%c月')");
+            sql.append(", '%Y年%m月')");
             sql.append("WHEN month(");
             sql.append(xFid);
             sql.append(")=1");

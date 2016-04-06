@@ -89,7 +89,7 @@ public class ChartController {
             option.title().text(json.getString("name")).x(X.center);
 //            option.title().text(json.getString("name"));
             //Tool.mark 无效 Tool.dataZoom,数值过大有问题，Y轴显示不了
-            option.toolbox().show(true).feature(Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
+            option.toolbox().show(true).feature(Tool.dataView, new MagicType(Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
             option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
             option.tooltip().padding(10).backgroundColor("white").borderColor("#7ABCE9").borderWidth(2);
             option.grid(new Grid().x(40).x2(100).y2(150));
@@ -221,7 +221,7 @@ public class ChartController {
 
         String aggregator = StringUtils.join(aggregatorList, ",");
 
-        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql, aggr_filterSql.toString(),start_time);
+        List<List<String>> list = service.getGroupArrayList(tb_id, xFid, aggregator, granularity, granularity_type, top, sortFid, filterSql, aggr_filterSql.toString(), start_time);
         List<String> xAxisData = list.get(list.size() - 1);//X轴
 
         Axis xAxis;
@@ -297,7 +297,7 @@ public class ChartController {
                     series = new Bar(name);
                 } else if ("C220".equals(type_optional.get(i))) {//折线图
                     series = new Line(name);
-                }else if("C271".equals(type_optional.get(i))){
+                } else if ("C271".equals(type_optional.get(i))) {
                     series = new Map(name);
                 }
                 //高级计算 cancel:取消percentage:百分比
@@ -310,7 +310,7 @@ public class ChartController {
                         for (int k = 0; k < list.get(j).size(); k++) {
                             JSONObject json = new JSONObject();
 //                            json.put("name", xAxisData.get(k));
-                            json.put("name", DataUtils.parseDate(xAxisData.get(k),DataUtils.date_sdf_wz).getTime());
+                            json.put("name", DataUtils.parseDate(xAxisData.get(k), DataUtils.date_sdf_wz).getTime());
                             json.put("value", new Object[]{xAxisData.get(k), list.get(j).get(k)});
                             series.data().add(json);
                         }
@@ -358,12 +358,12 @@ public class ChartController {
                         }
                     }
                 }
-                if("C271".equals(type_optional.get(i))){
+                if ("C271".equals(type_optional.get(i))) {
                     //series = new Map(name);
                     //String aa = "bbb";
                     //testService.resetMapAxis((CategoryAxis) option.xAxis().get(0));
                     option.series().add(series);
-                }else{
+                } else {
                     option.series().add(series);
                 }
 
