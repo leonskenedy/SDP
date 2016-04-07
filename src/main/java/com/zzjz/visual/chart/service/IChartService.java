@@ -84,4 +84,21 @@ public interface IChartService extends CommonService {
      */
     String joinFilterSql(JSONArray filterList);
 
+    /**
+     * 根据图表id获取到图表定义<br />
+     * 如果id为空或null,将返回自动生成的图表定义和新的id<br />
+     * 如果图表id对应数据不存在,自动生成图表定义<br />
+     * @param chartId 图表id
+     * @return json,格式如:{chart_id:"xxxxx", definition:{具体的图表定义}}
+     */
+    JSONObject fetchChart(String chartId);
+
+
+    /**
+     * 更新图表定义.<br />
+     * 如果该id的图表不存在,将创建该图表.<br />
+     * @param chartId 图表id
+     * @param jsonString 图表定义的json string
+     */
+    void modifyChart(String chartId, String jsonString);
 }

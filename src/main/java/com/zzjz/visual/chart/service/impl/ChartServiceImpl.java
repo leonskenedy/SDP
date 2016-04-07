@@ -11,6 +11,7 @@ import com.zzjz.visual.chart.service.IChartService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -19,6 +20,27 @@ import java.util.*;
 
 @Service
 public class ChartServiceImpl extends CommonServiceImpl implements IChartService {
+    private static final JSONObject _DEFAULT_CHART = new JSONObject();
+
+
+    @PostConstruct
+    private void setup(){
+        _DEFAULT_CHART.put("name", "未命名图表");
+        _DEFAULT_CHART.put("tb_id", "product");
+        _DEFAULT_CHART.put("table_name", "product");
+        _DEFAULT_CHART.put("description", "");
+        JSONObject meta = new JSONObject();
+        meta.put("level_fields", new JSONArray());
+        JSONObject level = new JSONObject();
+        level.put("x", new JSONArray());
+        level.put("y", new JSONArray());
+        JSONArray levels = new JSONArray();
+        levels.add(level);
+        meta.put("level", levels);
+        meta.put("filter_list", new JSONArray());
+        _DEFAULT_CHART.put("meta", meta);
+    }
+
 
     @Override
     public void save(String chartId, Object reqInfo, Object respInfo) {
@@ -89,7 +111,7 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
     private String limitSql(JSONObject top, String sql) {
         StringBuffer limitSql = new StringBuffer();
         //是否勾选维度显示条目数
-        if (top.getBoolean("enabled")) {
+        if (top != null && top.getBoolean("enabled")!=null && top.getBoolean("enabled")) {
             String topType = top.getString("type");
             Double numValue = top.getDoubleValue("value");
             Long count;
@@ -567,5 +589,45 @@ public class ChartServiceImpl extends CommonServiceImpl implements IChartService
             sql.append(")-1,'月')END");
         }
         return sql.toString();
+    }
+
+
+    @Override
+    public JSONObject fetchChart(String chartId) {
+        //json key
+        String labelChartId = "chart_id";
+        String labelDefinition = "definition";
+        //column name
+        String columnName = "reqinfo";
+        //sql
+        String sql = "select * from t_chart_option where id = ?";
+        //return json
+        JSONObject result = new JSONObject();
+
+        //empty id
+        if(chartId == null || chartId.equals("")){
+            result.put(labelChartId, UUID.randomUUID().toString());
+            result.put(labelDefinition, _DEFAULT_CHART);
+            save(result.getString(labelChartId), _DEFAULT_CHART.toJSONString(), "{}");
+            return result;
+        }
+
+        result.put(labelChartId, chartId);
+        List<Map<String, Object>> list = findForJdbc(sql, chartId);
+
+        //id not found
+        if(list.size() == 0){
+            result.put(labelDefinition, _DEFAULT_CHART);
+            save(chartId, _DEFAULT_CHART.toJSONString(), "{}");
+            return result;
+        }
+        result.put(labelDefinition, JSONObject.parse(list.get(0).get(columnName).toString()));
+        return result;
+    }
+
+    @Override
+    public void modifyChart(String chartId, String jsonString) {
+        String sql = "insert into t_chart_option(id,reqinfo,respinfo) values (?,?,?) on duplicate key update id=values(id),reqinfo=VALUES(reqinfo)";
+        executeSql(sql, chartId, jsonString, "{}");
     }
 }

@@ -37,6 +37,8 @@ import java.util.UUID;
 @Controller
 @RequestMapping("chart")
 public class ChartController {
+    private static final String _LABEL_SUCCESS = "success";
+
 
     @Autowired
     private IChartService service;
@@ -103,7 +105,7 @@ public class ChartController {
         }
         options.get(0).exportToHtml("test.html");
         String optionStr = GsonUtil.format(options.get(0));
-        service.save(chart_id, jsonString, optionStr);
+        service.save(chart_id, json.toJSONString(), optionStr);
         respJson.put("info", json);
         respJson.put("option", options.get(0).toString());
         System.out.println(options.get(0));
@@ -129,7 +131,7 @@ public class ChartController {
 
         JSONArray type_optional = new JSONArray();
         //判断是否双轴
-        if (item.getBoolean("show_y_axis_optional")) {
+        if (item.getBoolean("show_y_axis_optional") != null && item.getBoolean("show_y_axis_optional")) {
             type_optional = item.getJSONArray("type_optional");
         } else {
             type_optional.add(item.getString("chart_type"));
@@ -202,7 +204,7 @@ public class ChartController {
                     }
                 }
 
-                if (sort.getString("uniq_id").equals(yItem.getString("uniq_id"))) {
+                if (sort != null && sort.getString("uniq_id").equals(yItem.getString("uniq_id"))) {
                     String sortType = sort.getString("type");
                     if (Contants.SOTR_TYPE_ASC.equals(sortType)) {
                         sortFid = aggregator;
@@ -273,11 +275,11 @@ public class ChartController {
             ValueAxis valueAxis = new ValueAxis();
             valueAxis.splitLine().show(false);
             //设置最大值
-            if (!yaxis_max_disabled) {
+            if (yaxis_max_disabled != null && !yaxis_max_disabled) {
                 valueAxis.max(yaxis_max);
             }
             //设置最小值
-            if (!yaxis_min_disabled) {
+            if (yaxis_min_disabled != null && !yaxis_min_disabled) {
                 valueAxis.min(yaxis_min);
             }
 
@@ -323,43 +325,44 @@ public class ChartController {
                         series.data(list.get(j).toArray());
                     }
                 }
+                if(guide_lineArr != null){
+                    for (int z = 0; z < guide_lineArr.size(); z++) {
+                        JSONObject guide_line = guide_lineArr.getJSONObject(z);
+                        String value_type = guide_line.getString("value_type");
+                        String uniq_id = guide_line.getString("uniq_id");
+                        if (yItem.getString("uniq_id").equals(uniq_id)) {
+                            String guide_linName = guide_line.getString("name");
+                            //固定值辅助线 jar包功能不完善，使用json代替
+                            if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
+                                double value = guide_line.getDouble("value");
+                                JSONArray coordArray = new JSONArray();
 
-                for (int z = 0; z < guide_lineArr.size(); z++) {
-                    JSONObject guide_line = guide_lineArr.getJSONObject(z);
-                    String value_type = guide_line.getString("value_type");
-                    String uniq_id = guide_line.getString("uniq_id");
-                    if (yItem.getString("uniq_id").equals(uniq_id)) {
-                        String guide_linName = guide_line.getString("name");
-                        //固定值辅助线 jar包功能不完善，使用json代替
-                        if (Contants.GUIDE_LINE_TYPE_CONSTANT.equals(value_type)) {
-                            double value = guide_line.getDouble("value");
-                            JSONArray coordArray = new JSONArray();
-
-                            //起点
-                            JSONObject coordStart = new JSONObject();
-                            coordStart.put("name", value);
-                            coordStart.put("realName", guide_linName);
-                            //x,y轴
-                            coordStart.put("coord", new Object[]{xAxisData.get(0), value});
-                            //终点
-                            JSONObject coordStop = new JSONObject();
-                            coordStop.put("coord", new Object[]{xAxisData.get(xAxisData.size() - 1), value});
-                            coordArray.add(coordStart);
-                            coordArray.add(coordStop);
-                            series.markLine().data(coordArray);
-                            //计算值辅助线  最大值 最小值 平均值
-                        } else if (Contants.GUIDE_LINE_TYPE_CALCULATE.equals(value_type)) {
-                            PointData pointData = new PointData();
-                            pointData.name(guide_linName);
-                            String formula = guide_line.getString("formula");//AVG MIN MAX
-                            if (Contants.AGG_TYPE_AVG.equals(formula)) {
-                                pointData.type(MarkType.average);
-                            } else if (Contants.AGG_TYPE_MAX.equals(formula)) {
-                                pointData.type(MarkType.max);
-                            } else if (Contants.AGG_TYPE_MIN.equals(formula)) {
-                                pointData.type(MarkType.min);
+                                //起点
+                                JSONObject coordStart = new JSONObject();
+                                coordStart.put("name", value);
+                                coordStart.put("realName", guide_linName);
+                                //x,y轴
+                                coordStart.put("coord", new Object[]{xAxisData.get(0), value});
+                                //终点
+                                JSONObject coordStop = new JSONObject();
+                                coordStop.put("coord", new Object[]{xAxisData.get(xAxisData.size() - 1), value});
+                                coordArray.add(coordStart);
+                                coordArray.add(coordStop);
+                                series.markLine().data(coordArray);
+                                //计算值辅助线  最大值 最小值 平均值
+                            } else if (Contants.GUIDE_LINE_TYPE_CALCULATE.equals(value_type)) {
+                                PointData pointData = new PointData();
+                                pointData.name(guide_linName);
+                                String formula = guide_line.getString("formula");//AVG MIN MAX
+                                if (Contants.AGG_TYPE_AVG.equals(formula)) {
+                                    pointData.type(MarkType.average);
+                                } else if (Contants.AGG_TYPE_MAX.equals(formula)) {
+                                    pointData.type(MarkType.max);
+                                } else if (Contants.AGG_TYPE_MIN.equals(formula)) {
+                                    pointData.type(MarkType.min);
+                                }
+                                series.markLine().data(pointData);
                             }
-                            series.markLine().data(pointData);
                         }
                     }
                 }
@@ -402,4 +405,42 @@ public class ChartController {
         return respJson;
     }
 
+
+    //-----------------------------------
+    // Chengbo.yan's code
+    //-----------------------------------
+
+    /**
+     * 根据图表id获取到图表定义<br />
+     * 如果id为空或null,将返回自动生成的图表定义和新的id<br />
+     * 如果图表id对应数据不存在,自动生成图表定义<br />
+     * @param chartId 图表id
+     * @return json,格式如:{chart_id:"xxxxx", definition:{具体的图表定义}}
+     */
+    @RequestMapping(value = "fetchChart", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public Object fetchChartDefinition(@RequestParam(required = false, defaultValue = "") String chartId) {
+        return service.fetchChart(chartId);
+    }
+
+    /**
+     * 更新图表定义.<br />
+     * 如果该id的图表不存在,将创建该图表.<br />
+     * @param chartId 图表id
+     * @param definition 图表定义的json string
+     * @return {success:true|false}
+     */
+    @RequestMapping(value = "modifyChart", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public Object modifyChart(@RequestParam String chartId, @RequestParam String definition) {
+        JSONObject result = new JSONObject();
+        try{
+            service.modifyChart(chartId, definition);
+            result.put(_LABEL_SUCCESS, true);
+        }catch (Exception e){
+            e.printStackTrace();
+            result.put(_LABEL_SUCCESS, false);
+        }
+        return result;
+    }
 }

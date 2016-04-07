@@ -1,13 +1,210 @@
 var _chartConfig = {
+    chartId:"",
+    definition:null,
     dateTime: +new Date(),
+    /*temporary usage, reconstruct later*/
+    columns: [
+        {column_cn:"名称", column_en:"name", column_type:2},
+        {column_cn:"日期", column_en:"time", column_type:3},
+        {column_cn:"价格（元/公斤）", column_en:"price", column_type:1},
+        {column_cn:"类别", column_en:"type", column_type:2},
+        {column_cn:"出售方式", column_en:"selltype", column_type:2},
+        {column_cn:"省/直辖", column_en:"province", column_type:2, map_column: true},
+        {column_cn:"城市", column_en:"city", column_type:2, map_column: true}
+    ],
+    /*temporary usage, reconstruct later*/
+    columnMap:{
+        name: {column_cn:"名称", column_en:"name", column_type:2},
+        time: {column_cn:"日期", column_en:"time", column_type:3},
+        price: {column_cn:"价格（元/公斤）", column_en:"price", column_type:1},
+        type: {column_cn:"类别", column_en:"type", column_type:2},
+        selltype: {column_cn:"出售方式", column_en:"selltype", column_type:2},
+        province: {column_cn:"省/直辖", column_en:"province", column_type:2, map_column: true},
+        city: {column_cn:"城市", column_en:"city", column_type:2, map_column: true}
+    },
+    xAxis:{
+        /*temporary usage, reconstruct later*/
+        xAxisMenuData: [
+            {text:"按年", name:"year"},
+            {text:"按季", name:"quarter"},
+            {text:"按月", name:"month"},
+            {text:"按周", name:"week"},
+            {text:"按日", name:"day"},
+            {text:"更多", name:"more", children:[
+                {text:"按时", name:"hour"},
+                {text:"按分", name:"minute"},
+                {text:"按秒", name:"second"}
+            ]},
+            {text:"自定义", name:"manual"}
+        ],
+        /*temporary usage, reconstruct later*/
+        menuMap:{
+            year: "按年",
+            quarter: "按季",
+            month: "按月",
+            week: "按周",
+            day: "按日",
+            hour: "按时",
+            minute: "按分",
+            second: "按秒"
+        },
+        append: function(element){
+            var data = element.__zzjz__;
+            var column = _chartConfig.columnMap[data.fid];
+            $(element).appendTo($(".zzjz-xaxis-div"));
+            $(element).attr("column_en", column.column_en).attr("column_cn", column.column_cn)
+                .attr("column_type", column.column_type).attr("map_column", data.map_column? "true":"")
+                .attr("id", data.uniq_id).addClass("zzjz-axis-item")
+                .menubutton({
+                    plain: true,
+                    text: column.column_cn,
+                    hasDownArrow: false
+                }).draggable({
+                    revert:true,
+                    proxy: function(source){
+                        var p = $(source).clone();
+                        p.appendTo($("body"))
+                        return p;
+                    }
+                }).droppable({
+                    accept: ".zzjz-column-div",
+                    onDrop:function(e,source){
+                        $(".zzjz-xaxis-div").droppable("enable");
+                        $(".zzjz-xaxis-div").removeClass('zzjz-axis-over');
+                        var data = {
+                            column_en: $(this).attr("column_en"),
+                            column_cn: $(this).attr("column_cn"),
+                            column_type: $(this).attr("column_type"),
+                            class: "zzjz-level-item",
+                            id: _chartConfig.generateId(),
+                            map_column: $(this).attr("map_column")
+                        }
+                        var axisItem = $("<a></a>");
+                        for(var prop in data){
+                            axisItem.attr(prop, data[prop]);
+                        }
+                        axisItem.addClass("zzjz-level-item-selected")
+                        $(".zzjz-level-div").append(axisItem);
+                        $("#"+data.id).menubutton({
+                            plain: true,
+                            text: data.column_cn,
+                            hasDownArrow: false
+                        });
+                        data = {
+                            column_en: $(source).attr("column_en"),
+                            column_cn: $(source).attr("column_cn"),
+                            column_type: $(source).attr("column_type"),
+                            class: "zzjz-level-item",
+                            id: _chartConfig.generateId(),
+                            map_column: $(source).attr("map_column")
+                        }
+                        axisItem = $("<a></a>");
+                        for(var prop in data){
+                            axisItem.attr(prop, data[prop]);
+                        }
+                        $(".zzjz-level-div").append($("<span></span>").text(">"));
+                        $(".zzjz-level-div").append(axisItem);
+                        $("#"+data.id).menubutton({
+                            plain: true,
+                            text: data.column_cn,
+                            hasDownArrow: false
+                        });
+                        $(".zzjz-level-div").show();
+                        _chartConfig.resetEChartDiv();
+                        window._dropped = true;
+                    },
+                    onDragEnter:function(e, source){
+                        $(".zzjz-xaxis-div").droppable("disable")
+                        $(".zzjz-xaxis-div").addClass('zzjz-axis-over');
+                    },
+                    onDragLeave:function(e, source){
+                        $(".zzjz-xaxis-div").droppable("enable");
+                        $(".zzjz-xaxis-div").addClass('zzjz-axis-over');
+                    }
+                });
+            if(data.granularity && column.data_type == "3"){
+                $(element).attr("granularity", data.granularity).menubutton({
+                    text: column.column_cn + " (" + _chartConfig.xAxis.menuMap[data.granularity]+")",
+                    menu:"#mm_xaxis"
+                });
+            }
+        }
+    },
+    yAxis:{
+        menuMap: {
+            SUM: "求和",
+            AVG: "平均值",
+            COUNT: "计数",
+            COUNT_DISTINCT: "去重计数"
+        },
+        append: function(element){
+            var data = element.__zzjz__;
+            var column = _chartConfig.columnMap[data.fid];
+            $(element).appendTo($(".zzjz-yaxis-div"));
+            $(element).attr("column_en", column.column_en).attr("column_cn", column.column_cn)
+                .attr("column_type", column.column_type).attr("formula", data.aggregator)
+                .attr("id", data.uniq_id).addClass("zzjz-axis-item")
+                .menubutton({
+                    plain: true,
+                    text: column.column_cn + " (" + _chartConfig.yAxis.menuMap[data.aggregator] + ")",
+                    hasDownArrow: false,
+                    menu: "#mm"
+                }).draggable({
+                    revert:true,
+                    proxy: function(source){
+                        var p = $(source).clone();
+                        p.appendTo($("body"))
+                        return p;
+                    }
+                })
+        }
+    },
+    level:{
+        append: function(element){
+
+        }
+    },
     generateId: function () {
-        return this.dateTime++;
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+        });
+    },
+    init:function(){
+        var level = _chartConfig.definition.meta.level[0];
+        if(!level){
+            return;
+        }
+        for(var i = 0; i < level.x.length; i++){
+            var axis = document.createElement("a");
+            axis.__zzjz__ = level.x[i];
+            _chartConfig.xAxis.append(axis);
+        }
+        for(var i = 0; i < level.y.length; i++){
+            var axis = document.createElement("a");
+            axis.__zzjz__ = level.y[i];
+            _chartConfig.yAxis.append(axis);
+        }
+        this.resetEChartDiv();
+    },
+    fetchDefinition:function(id){
+        $.ajax({
+            url: "../chart/fetchChart",
+            data:{chartId: id},
+            dataType: "json",
+            async: false,
+            success:function(data){
+                _chartConfig.chartId = data.chart_id;
+                data.definition.chart_id = data.chart_id;
+                _chartConfig.definition = data.definition;
+            }
+        })
     },
     parseType: function () {
         $("span[class_id]").each(function () {
             $(this).removeClass("zzjz-chart-type-active").removeClass($(this).attr("original_class") + "-selective")
         });
-        var level = chart.meta.level[0];
+        var level = _chartConfig.definition.meta.level[0];
         var arr = [];
         for (var i = 0; i < this.typeFilter.length; i++) {
             var result = this.typeFilter[i](level);
@@ -140,12 +337,25 @@ var _chartConfig = {
         $(".zzjz-echart-div").height($(".zzjz-echart-div").parent().height() - $(".zzjz-axis-div").height());
         return this;
     },
-
+    modifyChart:function(redraw){
+        $.ajax({
+            url: "../chart/modifyChart",
+            data: {chartId: _chartConfig.chartId, definition: JSON.stringify(_chartConfig.definition)},
+            dataType: "json",
+            type: "post",
+            success: function(data){
+                if(data.success && redraw){
+                    _chartConfig.drawChart();
+                }
+            }
+        });
+        return this;
+    },
     drawChart: function () {
         $.ajax({
             url: "../chart/update",
             type: "post",
-            data: encodeURIComponent(JSON.stringify(chart)),
+            data: encodeURIComponent(JSON.stringify(_chartConfig.definition)),
             dataType: "json",
             success: function (data) {
                 try {
@@ -170,10 +380,8 @@ var _chartConfig = {
         return this;
     },
     addXAxis: function (jEle, refresh) {
-        if (!chart.meta.level[0].x) {
-            chart.meta.level[0].x = [];
-        }
-        chart.meta.level[0].x.push({
+        var currentX = _chartConfig.definition.meta.level[0].x;
+        currentX.push({
             name: $(jEle).attr("column_cn"),
             data_type: dataType[$(jEle).attr("column_type")],
             is_new: false,
@@ -192,15 +400,17 @@ var _chartConfig = {
     },
     removeAxis: function (jEle, refresh) {
         var uniqId = $(jEle).attr("id");
-        for (var i = 0; i < chart.meta.level[0].x.length; i++) {
-            if (chart.meta.level[0].x[i].uniq_id == uniqId) {
-                chart.meta.level[0].x.splice(i, 1);
+        var currentX = _chartConfig.definition.meta.level[0].x;
+        var currentY = _chartConfig.definition.meta.level[0].y;
+        for (var i = 0; i < currentX.length; i++) {
+            if (currentX[i].uniq_id == uniqId) {
+                currentX.splice(i, 1);
                 break;
             }
         }
-        for (var i = 0; i < chart.meta.level[0].y.length; i++) {
-            if (chart.meta.level[0].y[i].uniq_id == uniqId) {
-                chart.meta.level[0].y.splice(i, 1);
+        for (var i = 0; i < currentY.length; i++) {
+            if (currentY[i].uniq_id == uniqId) {
+                currentY.splice(i, 1);
                 break;
             }
         }
@@ -213,10 +423,8 @@ var _chartConfig = {
         return this;
     },
     addYAxis: function (jEle, refresh) {
-        if (!chart.meta.level[0].y) {
-            chart.meta.level[0].y = [];
-        }
-        chart.meta.level[0].y.push({
+        var currentY = _chartConfig.definition.meta.level[0].y;
+        currentY.push({
             name: $(jEle).attr("column_cn"),
             data_type: dataType[$(jEle).attr("column_type")],
             aggregator: $(jEle).attr("formula"),
@@ -245,9 +453,10 @@ var _chartConfig = {
         return this;
     },
     updateYAxis:function(jEle, refresh){
+        var currentY = _chartConfig.definition.meta.level[0].y;
         var item = null;
         var targetId = $(jEle).attr("id");
-        var items = chart.meta.level[0].y;
+        var items = currentY;
         for(var i = 0; i < items.length; i++){
             if(items[i].uniq_id == targetId){
                 item = items[i];

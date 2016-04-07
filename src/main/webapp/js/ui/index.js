@@ -1,4 +1,6 @@
 $(document).ready(function(){
+    _chartConfig.fetchDefinition("1234-abcd-2345-bcde-3456-cdef");
+
     //return;
     var panelIds = {
         bodyCenter: "body_panel_center",
@@ -284,6 +286,7 @@ $(document).ready(function(){
                     for(var prop in data){
                         axisItem.attr(prop, data[prop]);
                     }
+                    axisItem.addClass("zzjz-level-item-selected")
                     $(".zzjz-level-div").append(axisItem);
                     $("#"+data.id).menubutton({
                         plain: true,
@@ -761,6 +764,8 @@ $(document).ready(function(){
         }
     });
 
+
+    _chartConfig.init();
 
 });
 var echart = null;
