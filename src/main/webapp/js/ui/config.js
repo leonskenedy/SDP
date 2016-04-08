@@ -1,5 +1,6 @@
 var _chartConfig = {
     chartId:"",
+    currentLevel: 0,
     definition:null,
     dateTime: +new Date(),
     /*temporary usage, reconstruct later*/
@@ -72,45 +73,28 @@ var _chartConfig = {
                         $(".zzjz-xaxis-div").droppable("enable");
                         $(".zzjz-xaxis-div").removeClass('zzjz-axis-over');
                         var data = {
-                            column_en: $(this).attr("column_en"),
-                            column_cn: $(this).attr("column_cn"),
-                            column_type: $(this).attr("column_type"),
-                            class: "zzjz-level-item",
-                            id: _chartConfig.generateId(),
-                            map_column: $(this).attr("map_column")
+                            fid: $(this).attr("column_en"),
+                            name: $(this).attr("column_cn"),
+                            data_type: dataType[$(this).attr("column_type")],
+                            is_new: false
                         }
                         var axisItem = $("<a></a>");
-                        for(var prop in data){
-                            axisItem.attr(prop, data[prop]);
-                        }
+                        _chartConfig.bind(axisItem[0], data);
+                        _chartConfig.level.append(axisItem[0])
                         axisItem.addClass("zzjz-level-item-selected")
-                        $(".zzjz-level-div").append(axisItem);
-                        $("#"+data.id).menubutton({
-                            plain: true,
-                            text: data.column_cn,
-                            hasDownArrow: false
-                        });
+
                         data = {
-                            column_en: $(source).attr("column_en"),
-                            column_cn: $(source).attr("column_cn"),
-                            column_type: $(source).attr("column_type"),
-                            class: "zzjz-level-item",
-                            id: _chartConfig.generateId(),
-                            map_column: $(source).attr("map_column")
+                            fid: $(source).attr("column_en"),
+                            name: $(source).attr("column_cn"),
+                            data_type: dataType[$(source).attr("column_type")],
+                            is_new: false
                         }
                         axisItem = $("<a></a>");
-                        for(var prop in data){
-                            axisItem.attr(prop, data[prop]);
-                        }
-                        $(".zzjz-level-div").append($("<span></span>").text(">"));
-                        $(".zzjz-level-div").append(axisItem);
-                        $("#"+data.id).menubutton({
-                            plain: true,
-                            text: data.column_cn,
-                            hasDownArrow: false
-                        });
+                        _chartConfig.bind(axisItem[0], data);
+                        _chartConfig.level.append(axisItem[0]);
+
                         $(".zzjz-level-div").show();
-                        _chartConfig.resetEChartDiv();
+                        _chartConfig.drawChart().resetEChartDiv();
                         window._dropped = true;
                     },
                     onDragEnter:function(e, source){
@@ -161,7 +145,30 @@ var _chartConfig = {
     },
     level:{
         append: function(element){
+            var data = element.__zzjz__;
+            $(element).attr("id", _chartConfig.generateId);
+            $(element).addClass("zzjz-level-item");
+            $(element).menubutton({
+                plain: true,
+                text: data.name,
+                hasDownArrow: false
+            });
+            $(element).appendTo($(".zzjz-level-div"));
+        },
+        addDrillDown:function(){
+            echart.on("click", function(arg){
+                var name = arg.name;
+                var x = _chartConfig.definition.meta.level[0].x[_chartConfig.currentLevel];
+                $.ajax({
+                    url: "../chart/drillDown",
+                    data: {chartId: _chartConfig.chartId, fid: x.fid, drillLevel: _chartConfig.currentLevel+1, drillValue:[name]},
+                    dataType: "json",
+                    type: "post",
+                    success: function(data){
 
+                    }
+                })
+            })
         }
     },
     generateId: function () {
@@ -170,22 +177,38 @@ var _chartConfig = {
             return v.toString(16);
         });
     },
+    bind: function(element, data){
+        element.__zzjz__ = data;
+        data.__zzjz__ = function(){
+            return element;
+        }
+    },
     init:function(){
         var level = _chartConfig.definition.meta.level[0];
+        var levelField = _chartConfig.definition.meta.level_fields;
         if(!level){
             return;
         }
         for(var i = 0; i < level.x.length; i++){
             var axis = document.createElement("a");
-            axis.__zzjz__ = level.x[i];
+            this.bind(axis, level.x[i]);
             _chartConfig.xAxis.append(axis);
         }
         for(var i = 0; i < level.y.length; i++){
             var axis = document.createElement("a");
-            axis.__zzjz__ = level.y[i];
+            this.bind(axis, level.y[i]);
             _chartConfig.yAxis.append(axis);
         }
-        this.resetEChartDiv();
+        debugger;
+        for(var i = 0; i < levelField.length; i++){
+            var axis = document.createElement("a");
+            this.bind(axis, levelField[i]);
+            _chartConfig.level.append(axis);
+        }
+        if(levelField.length > 0){
+            $(".zzjz-level-div").show();
+        }
+        this.parseType(level.chart_type).drawChart().resetEChartDiv();
     },
     fetchDefinition:function(id){
         $.ajax({
@@ -200,7 +223,7 @@ var _chartConfig = {
             }
         })
     },
-    parseType: function () {
+    parseType: function (assigned) {
         $("span[class_id]").each(function () {
             $(this).removeClass("zzjz-chart-type-active").removeClass($(this).attr("original_class") + "-selective")
         });
@@ -214,15 +237,20 @@ var _chartConfig = {
                 arr.push(result);
             }
         }
-        if (arr.length > 1) {
-            var span = $("span[class_id=" + arr[1].classId + "]");
-            level.chart_type = arr[1].classId;
-            span.addClass("zzjz-chart-type-active");
-        } else {
-            var span = $("span[class_id=" + arr[0].classId + "]");
-            span.addClass("zzjz-chart-type-active");
-            level.chart_type = arr[0].classId;
+        if(assigned){
+            $("span[class_id=" + arr[1].classId + "]").addClass("zzjz-chart-type-active");
+        }else{
+            if (arr.length > 1) {
+                var span = $("span[class_id=" + arr[1].classId + "]");
+                level.chart_type = arr[1].classId;
+                span.addClass("zzjz-chart-type-active");
+            } else {
+                var span = $("span[class_id=" + arr[0].classId + "]");
+                span.addClass("zzjz-chart-type-active");
+                level.chart_type = arr[0].classId;
+            }
         }
+        return this;
     },
     parseMap: function (option) {
         var mapData = [];
@@ -375,6 +403,7 @@ var _chartConfig = {
                 } else {
                     echart.setOption(option);
                 }
+                _chartConfig.level.addDrillDown();
             }
         });
         return this;

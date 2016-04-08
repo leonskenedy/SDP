@@ -443,4 +443,13 @@ public class ChartController {
         }
         return result;
     }
+
+
+    @RequestMapping(value = "drillDown", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public Object drillDown(@RequestParam String chartId, @RequestParam String fid, @RequestParam int drillLevel, @RequestParam String[] drillValue) {
+        JSONObject result = new JSONObject();
+
+        return result;
+    }
 }
