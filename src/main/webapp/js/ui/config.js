@@ -1,4 +1,8 @@
 var _chartConfig = {
+    mapJSON:{
+        "江苏":"jiangsu"
+    },
+    loadedMap:{},
     chartId:"",
     currentLevel: 0,
     definition:null,
@@ -80,7 +84,7 @@ var _chartConfig = {
                         }
                         var axisItem = $("<a></a>");
                         _chartConfig.bind(axisItem[0], data);
-                        _chartConfig.level.append(axisItem[0])
+                        _chartConfig.level.append(axisItem[0], true)
                         axisItem.addClass("zzjz-level-item-selected")
 
                         data = {
@@ -91,8 +95,8 @@ var _chartConfig = {
                         }
                         axisItem = $("<a></a>");
                         _chartConfig.bind(axisItem[0], data);
-                        _chartConfig.level.append(axisItem[0]);
-
+                        _chartConfig.level.append(axisItem[0], true);
+                        _chartConfig.level.addLevelFields(1, data.fid);
                         $(".zzjz-level-div").show();
                         _chartConfig.drawChart().resetEChartDiv();
                         window._dropped = true;
@@ -144,8 +148,11 @@ var _chartConfig = {
         }
     },
     level:{
-        append: function(element){
+        append: function(element, isNew){
             var data = element.__zzjz__;
+            if(isNew){
+                _chartConfig.definition.meta.level_fields.push(data);
+            }
             $(element).attr("id", _chartConfig.generateId);
             $(element).addClass("zzjz-level-item");
             $(element).menubutton({
@@ -165,10 +172,72 @@ var _chartConfig = {
                     dataType: "json",
                     type: "post",
                     success: function(data){
+                        try {
+                            echart.dispose($(".zzjz-echart-div-right")[0]);
+                        } catch (e) {
 
+                        }
+                        var option = eval("(" + data.option + ")");
+                        debugger;
+                        echart = echarts.init($(".zzjz-echart-div-right")[0]);
+                        if (chart.meta.level[0].chart_type == "C271") {
+                            echart.setOption(_chartConfig.parseMap(option, name));
+                        } else if (chart.meta.level[0].auto_flush) {
+                            seriesFormat(option.series);
+                            echart.setOption(option);
+                            timeTicket(3000);
+                        } else {
+                            echart.setOption(option);
+                        }
                     }
                 })
             })
+        },
+        addLevelFields:function(levelIndex, columnEn){
+            var before = _chartConfig.definition.meta.level[levelIndex - 1];
+            var column = _chartConfig.columnMap[columnEn];
+            var after = {x:[], y:[]};
+            after.chart_type = before.chart_type;
+
+            var x = {
+                data_type: dataType[column.column_type],
+                fid: columnEn,
+                is_build_aggregated: 0,
+                is_new: false,
+                name: column.column_cn,
+                uniq_id: _chartConfig.generateId()
+            };
+            if(column.map_column){
+                x.map_column = "true";
+            }
+            if(column.column_type == 3){
+                x.granularity = "day";
+            }
+            after.x.push(x);
+            for(var i = 0; i < before.y.length; i++){
+                var y = {};
+                for(var prop in before.y[i]){
+                    if(prop == "__zzjz__"){
+                        continue;
+                    }
+                    if(prop == "formatter"){
+                        y.formatter = {
+                            check: "num",
+                            num:{
+                                digit: 0,
+                                millesimal: false
+                            },
+                            percent:{
+                                digit: 0
+                            }
+                        }
+                    }else{
+                        y[prop] = before.y[i][prop];
+                    }
+                }
+                after.y.push(y);
+            }
+            _chartConfig.definition.meta.level.push(after);
         }
     },
     generateId: function () {
@@ -252,11 +321,27 @@ var _chartConfig = {
         }
         return this;
     },
-    parseMap: function (option) {
+    parseMap: function (option, drillName) {
+        var mapType = "china";
+        if(drillName){
+            if(!_chartConfig.loadedMap[drillName]){
+                $.ajax({
+                    url:"../js/map/"+ _chartConfig.mapJSON[drillName]+".js",
+                    dataType: "script",
+                    async: false,
+                    success:function(){
+                        _chartConfig.loadedMap[drillName] = true;
+                        mapType = _chartConfig.mapJSON[drillName];
+                    }
+                });
+            }
+        }
         var mapData = [];
         for (var i = 0; i < option.xAxis[0].data.length; i++) {
+
+            //临时解决方法,为演示
             var item = {
-                name: option.xAxis[0].data[i].replace(/(省|市)$/, ""),
+                name: !drillName ? option.xAxis[0].data[i].replace(/(省|市)$/, "") : option.xAxis[0].data[i]+"市",
                 value: option.series[0].data[i]
             };
             mapData.push(item);
@@ -304,7 +389,7 @@ var _chartConfig = {
                 {
                     name: option.series[0].name,
                     type: 'map',
-                    mapType: 'china',
+                    mapType: mapType,
                     roam: false,
                     itemStyle: {
                         normal: {label: {show: true}},

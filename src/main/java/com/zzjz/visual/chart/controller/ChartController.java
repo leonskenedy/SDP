@@ -447,9 +447,54 @@ public class ChartController {
 
     @RequestMapping(value = "drillDown", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public Object drillDown(@RequestParam String chartId, @RequestParam String fid, @RequestParam int drillLevel, @RequestParam String[] drillValue) {
-        JSONObject result = new JSONObject();
+    public Object drillDown(@RequestParam String chartId, @RequestParam String fid, @RequestParam int drillLevel, @RequestParam(value = "drillValue[]") String[] drillValue) {
+        return drillDownChart(chartId, fid, drillLevel, drillValue);
+    }
 
-        return result;
+    private JSONObject drillDownChart(String chartId, String fid, int drillLevel, String[] drillValue){
+        JSONObject respJson = new JSONObject();
+        respJson.put("flag", "0");
+        respJson.put("msg", "success");
+
+
+        String labelDefinition = "definition";
+        JSONObject chart = service.fetchChart(chartId);
+        JSONObject definition = chart.getJSONObject(labelDefinition);
+        JSONObject meta = definition.getJSONObject("meta");
+        String tb_id = definition.getString("tb_id");
+        //层级数组
+        JSONArray level_fields = meta.getJSONArray("level_fields");
+        //XY轴显示参数
+        JSONArray level = meta.getJSONArray("level");
+        //筛选器
+        JSONArray filter_list = meta.getJSONArray("filter_list");
+        //拼装筛选器sql语句
+        String filterSql = service.joinFilterSql(filter_list);
+        String drillFilterSql = "";
+        for(int i = 0; i < drillLevel; i++){
+            JSONObject x = level.getJSONObject(i).getJSONArray("x").getJSONObject(0);
+            drillFilterSql += " and " + x.getString("fid") + "='" + drillValue[i]+"'";
+        }
+        if(filterSql == null || filterSql.equals("")){
+            filterSql = drillFilterSql.replaceAll("^\\sand\\s", "");
+        }else{
+            filterSql += " and " + drillFilterSql;
+        }
+        //图内筛选器
+        JSONObject filter_list_inner = meta.getJSONObject("filter_list_inner");
+
+        GsonOption option = new EnhancedOption();
+        option.title().text(meta.getString("name")).x(X.center);
+        JSONObject levelItem = level.getJSONObject(drillLevel);
+        option.toolbox().show(true).feature(Tool.dataView, new MagicType(Magic.line, Magic.bar, Magic.stack, Magic.tiled).show(true), Tool.restore, Tool.saveAsImage);
+        option.calculable(true).tooltip().axisPointer(new AxisPointer().type(PointerType.shadow)).trigger(Trigger.axis);
+        option.tooltip().padding(10).backgroundColor("white").borderColor("#7ABCE9").borderWidth(2);
+        option.grid(new Grid().x(40).x2(100).y2(150));
+        setData(chartId, tb_id, filterSql, option, levelItem);
+
+        respJson.put("info", meta);
+        respJson.put("option", option.toString());
+        System.out.println(option);
+        return respJson;
     }
 }
