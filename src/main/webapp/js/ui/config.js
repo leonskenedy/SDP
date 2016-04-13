@@ -180,9 +180,9 @@ var _chartConfig = {
                         var option = eval("(" + data.option + ")");
                         debugger;
                         echart = echarts.init($(".zzjz-echart-div-right")[0]);
-                        if (chart.meta.level[0].chart_type == "C271") {
+                        if (_chartConfig.definition.meta.level[0].chart_type == "C271") {
                             echart.setOption(_chartConfig.parseMap(option, name));
-                        } else if (chart.meta.level[0].auto_flush) {
+                        } else if (_chartConfig.definition.meta.level[0].auto_flush) {
                             seriesFormat(option.series);
                             echart.setOption(option);
                             timeTicket(3000);
@@ -479,9 +479,9 @@ var _chartConfig = {
                 var option = eval("(" + data.option + ")");
                 debugger;
                 echart = echarts.init($(".zzjz-echart-div-right")[0]);
-                if (chart.meta.level[0].chart_type == "C271") {
+                if (_chartConfig.definition.meta.level[0].chart_type == "C271") {
                     echart.setOption(_chartConfig.parseMap(option));
-                } else if (chart.meta.level[0].auto_flush) {
+                } else if (_chartConfig.definition.meta.level[0].auto_flush) {
                     seriesFormat(option.series);
                     echart.setOption(option);
                     timeTicket(3000);

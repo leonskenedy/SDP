@@ -1,6 +1,6 @@
 $(document).ready(function(){
-    _chartConfig.fetchDefinition("1234-abcd-2345-bcde-3456-cdef");
-
+    //_chartConfig.fetchDefinition("1234-abcd-2345-bcde-3456-cdef");
+    _chartConfig.fetchDefinition("1234-UIJK-2345-bcde-3456-cdef");
     //return;
     var panelIds = {
         bodyCenter: "body_panel_center",
@@ -517,7 +517,8 @@ $(document).ready(function(){
         if($(this).hasClass($(this).attr("original_class")+"-selective")){
             $("span[class_id]").removeClass("zzjz-chart-type-active");
             $(this).addClass("zzjz-chart-type-active");
-            chart.meta.level[0].chart_type = $(this).attr("class_id");
+            _chartConfig.definition.meta.level[0].chart_type = $(this).attr("class_id");
+            //chart.meta.level[0].chart_type = $(this).attr("class_id");
             _chartConfig.drawChart();
         }
     })
@@ -706,10 +707,10 @@ $(document).ready(function(){
             $("#dynamic_start").datetimebox("setValue", now);
             now.setTime(now.getTime() + 24*60*60*1000);
             $("#dynamic_end").datetimebox("setValue", new Date());
-            chart.meta.level[0].auto_flush = true;
+            _chartConfig.definition.meta.level[0].auto_flush = true;
         }else{
             $("#dynamic_line_operate_div").hide()
-            chart.meta.level[0].auto_flush = false;
+            _chartConfig.definition.meta.level[0].auto_flush = false;
         }
     });
     $(".zzjz-echart-div").append(

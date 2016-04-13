@@ -15,7 +15,7 @@ function setupDataFilter(){
                     if(_filterConfig.isEdit){
 
                     }else{
-                        var filterList = chart.meta.filter_list?chart.meta.filter_list:chart.meta.filter_list=[];
+                        var filterList = _chartConfig.definition.meta.filter_list?_chartConfig.definition.meta.filter_list:_chartConfig.definition.meta.filter_list=[];
                         var filterType = $("#filter_tab").tabs("getSelected").attr("id").replace("adv_type_", "");
                         if(filterType == "exact"){
                             var datas = $("#accurate_center").find(".zzjz-filter-datalist").datalist("getData").rows;
