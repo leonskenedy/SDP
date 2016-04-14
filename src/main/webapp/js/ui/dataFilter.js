@@ -225,7 +225,16 @@ function setupDataFilter(){
                     case "2":
                         tabLis.eq(2).hide();
                         $("#filter_tab").tabs("select", 0);
-                        break
+                        break;
+                    case "number":
+                        tabLis.eq(0).hide();
+                        tabLis.eq(1).hide();
+                        $("#filter_tab").tabs("select", 2);
+                        break;
+                    case "string":
+                        tabLis.eq(2).hide();
+                        $("#filter_tab").tabs("select", 0);
+                        break;
                 }
 
             }
@@ -442,7 +451,6 @@ function initFilter(columnEn, columnType, isEdit){
         textField: columnEn,
         border: false,
         onClickRow:function(index, row){
-           // alert(11)
             var added = $("#accurate_center").find(".zzjz-filter-datalist").datalist("getData").rows;
             for(var i = 0; i < added.length; i++){
                 if(row[columnEn] == added[i][columnEn]){

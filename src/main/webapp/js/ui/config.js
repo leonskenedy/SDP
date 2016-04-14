@@ -240,6 +240,230 @@ var _chartConfig = {
             _chartConfig.definition.meta.level.push(after);
         }
     },
+    filter:{
+        remove:function(element){
+            var data = element.__zzjz__;
+            var filterList =  _chartConfig.definition.meta.filter_list;
+            $(element).panel("destroy");
+            for(var i = 0; i < filterList.length; i++){
+                if(filterList[i] == data){
+                    filterList.splice(i, 1);
+                    _chartConfig.drawChart()
+                }
+            }
+        },
+        initEdit:function(element){
+            var data = element.__zzjz__;
+            window._filterConfig = {isEdit: true, columnEn: data.fid, columnType: data.data_type, columnCn: data.name}
+            $("#data_filter_dialog").dialog("open");
+            var index = 0;
+            if(data.data_type == "string"){
+                $("#accurate_west").find(".zzjz-filter-datalist").datalist({
+                    url: "uniqueData",
+                    queryParams:{columnName: data.fid, columnType: data.data_type},
+                    valueField: data.fid,
+                    textField: data.fid,
+                    border: false,
+                    onClickRow:function(index, row){
+                        var added = $("#accurate_center").find(".zzjz-filter-datalist").datalist("getData").rows;
+                        for(var i = 0; i < added.length; i++){
+                            if(row[data.fid] == added[i][data.fid]){
+                                $.messager.alert("提示", "该数据已添加.", "info");
+                                return;
+                            }
+                        }
+                        $("#accurate_center").find(".zzjz-filter-datalist").datalist("appendRow", row);
+                    }
+                });
+                $(".zzjz-condition-input").textbox("setValue", "");
+                if(data.adv_type == "exact"){
+                    $(".zzjz-filter-select").combobox("setValue", data.range_type);
+
+                    $("#accurate_center").find(".zzjz-filter-datalist").datalist({
+                        data:JSON.parse(data.range[0]).map(function(s){var obj = {}; obj[data.fid] = s; return obj}),
+                        width: "100%",
+                        valueField:data.fid,
+                        textField:data.fid,
+                        border: false,
+                        onClickRow:function(index, row){
+                            $("#accurate_center").find(".zzjz-filter-datalist").datalist("deleteRow", index);
+                        }
+                    });
+                }else{
+                    $("#accurate_center").find(".zzjz-filter-datalist").datalist({
+                        data:[],
+                        width: "100%",
+                        valueField:data.fid,
+                        textField:data.fid,
+                        border: false,
+                        onClickRow:function(index, row){
+                            $("#accurate_center").find(".zzjz-filter-datalist").datalist("deleteRow", index);
+                        }
+                    });
+                }
+
+                if(data.adv_type == "condition"){
+                    index = 1;
+                    var range = JSON.parse(data.range[0]);
+                    $(".zzjz-condition-select-type").combobox("setValue", range.condition_type);
+                    $(".zzjz-condition-datagrid").datagrid({
+                        data:range.conditions.map(function(o){
+                            var obj = {};
+                            obj.column_cn = data.name;
+                            obj.operator = o.calc_type;
+                            obj.keyword = o.value;
+                            return obj;
+                        }),
+                        height:300,
+                        onDblClickRow: function(index, row){
+                            $(".zzjz-condition-datagrid").datagrid("deleteRow", index);
+                        },
+                        columns:[[{
+                            field:"column_cn", title:"列名", width:"20%"
+                        },{
+                            field:"operator", title: "操作符",width:"30%",formatter:function(value, row, index){
+                                switch (value){
+                                    case "0": return "等于";
+                                    case "1": return "不等于";
+                                    case "6": return "包含";
+                                    case "7": return "不包含";
+                                    case "10": return "开头包含";
+                                    case "11": return "结尾包含";
+                                }
+                            }
+                        },{
+                            field:"keyword", title: "关键字", width:"40%"
+                        }]]
+                    });
+                }else{
+                    $(".zzjz-condition-datagrid").datagrid({
+                        data:[],
+                        height:300,
+                        onDblClickRow: function(index, row){
+                            $(".zzjz-condition-datagrid").datagrid("deleteRow", index);
+                        },
+                        columns:[[{
+                            field:"column_cn", title:"列名", width:"20%"
+                        },{
+                            field:"operator", title: "操作符",width:"30%",formatter:function(value, row, index){
+                                switch (value){
+                                    case "0": return "等于";
+                                    case "1": return "不等于";
+                                    case "6": return "包含";
+                                    case "7": return "不包含";
+                                    case "10": return "开头包含";
+                                    case "11": return "结尾包含";
+                                }
+                            }
+                        },{
+                            field:"keyword", title: "关键字", width:"40%"
+                        }]]
+                    });
+                }
+                if(data.adv_type == "expression"){
+                    index = 3;
+                    $(".zzjz-expression-input").textbox("setValue", data.oSql);
+                }else{
+                    $(".zzjz-expression-input").textbox("setValue", "");
+                }
+            }
+
+
+
+            $("#filter_tab").tabs("select", index);
+        },
+        append:function(element, isNew){
+            var data = element.__zzjz__;
+            if(data.data_type == "string" && data.adv_type == "exact"){
+                $(element).attr("class", "zzjz-filter-data-panel").appendTo($(".zzjz-filter-data-panel-div")).panel({
+                    title: _chartConfig.columnMap[data.fid].column_cn,
+                    collapsible:true,
+                    bodyCls:"zzjz-filter-panel-body",
+                    tools:[
+                        {
+                            iconCls:"icon-edit",
+                            handler:function(){
+                                _chartConfig.filter.initEdit($(this).parent().parent().parent().find(".zzjz-filter-data-panel")[0]);
+                            }
+
+                        },{
+                            iconCls: "icon-remove",
+                            handler:function(){
+                                _chartConfig.filter.remove($(this).parent().parent().parent().find(".zzjz-filter-data-panel")[0]);
+                            }
+                        }
+                    ]
+                }).append(
+                    $("<p></p>").text(data.range_type == "0" ? "排除下列项" : "包含下列项")
+                ).append(
+                    JSON.parse(data.range[0]).map(function(s){return $("<p></p>").text(s)})
+                )
+            }else if(data.data_type == "string" && data.adv_type == "condition"){
+                var range = JSON.parse(data.range[0]);
+
+                $(element).attr("class", "zzjz-filter-data-panel").appendTo($(".zzjz-filter-data-panel-div")).panel({
+                    title: _chartConfig.columnMap[data.fid].column_cn,
+                    collapsible:true,
+                    bodyCls:"zzjz-filter-panel-body",
+                    tools:[
+                        {
+                            iconCls:"icon-edit",
+                            handler:function(){
+                                _chartConfig.filter.initEdit($(this).parent().parent().parent().find(".zzjz-filter-data-panel")[0]);
+                            }
+                        },
+                        {
+                            iconCls: "icon-remove",
+                            handler:function(){
+                                _chartConfig.filter.remove($(this).parent().parent().parent().find(".zzjz-filter-data-panel")[0])
+                            }
+                        }
+                    ]
+                }).append(
+                    $("<p></p>").text(range.condition_type == "1" ? "满足任一条件" : "满足所有条件")
+                ).append(
+                    range.conditions.map(
+                        function(s){
+                            var p = $("<p></p>");
+                            switch (s.calc_type){
+                                case "0":return p.text("等于 " + s.value);
+                                case "1":return p.text("不等于 " + s.value);
+                                case "6":return p.text("包含 " + s.value);
+                                case "7":return p.text("不包含 " + s.value);
+                                case "10":return p.text("开头包含 " + s.value);
+                                case "11":return p.text("结尾包含 " + s.value);
+                            }
+                        }
+                    )
+                )
+            }else if(data.data_type == "string" && data.adv_type == "expression"){
+                $(element).attr("class", "zzjz-filter-data-panel").appendTo($(".zzjz-filter-data-panel-div")).panel({
+                    title: data.name,
+                    collapsible:true,
+                    bodyCls:"zzjz-filter-panel-body",
+                    tools:[
+                        {
+                            iconCls:"icon-edit",
+                            handler:function(){
+                                _chartConfig.filter.initEdit($(this).parent().parent().parent().find(".zzjz-filter-data-panel")[0]);
+                            }
+                        },
+                        {
+                            iconCls: "icon-remove",
+                            handler:function(){
+                                _chartConfig.filter.remove($(this).parent().parent().parent().find(".zzjz-filter-data-panel")[0]);
+                            }
+                        }
+                    ]
+                }).append(
+                    $("<p></p>").text("自定义表达式")
+                )
+            }
+            if(isNew){
+                _chartConfig.definition.meta.filter_list.push(data);
+            }
+        }
+    },
     generateId: function () {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
@@ -255,6 +479,7 @@ var _chartConfig = {
     init:function(){
         var level = _chartConfig.definition.meta.level[0];
         var levelField = _chartConfig.definition.meta.level_fields;
+        var filterList = _chartConfig.definition.meta.filter_list;
         if(!level){
             return;
         }
@@ -268,11 +493,15 @@ var _chartConfig = {
             this.bind(axis, level.y[i]);
             _chartConfig.yAxis.append(axis);
         }
-        debugger;
         for(var i = 0; i < levelField.length; i++){
             var axis = document.createElement("a");
             this.bind(axis, levelField[i]);
             _chartConfig.level.append(axis);
+        }
+        for(var i = 0; i < filterList.length; i++){
+            var element = document.createElement("div");
+            this.bind(element, filterList[i]);
+            _chartConfig.filter.append(element);
         }
         if(levelField.length > 0){
             $(".zzjz-level-div").show();
@@ -307,7 +536,7 @@ var _chartConfig = {
             }
         }
         if(assigned){
-            $("span[class_id=" + arr[1].classId + "]").addClass("zzjz-chart-type-active");
+            $("span[class_id=" + assigned + "]").addClass("zzjz-chart-type-active");
         }else{
             if (arr.length > 1) {
                 var span = $("span[class_id=" + arr[1].classId + "]");
