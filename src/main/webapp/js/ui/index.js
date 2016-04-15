@@ -332,6 +332,7 @@ $(document).ready(function(){
         text:"降序"
     });
     initXAxisMenu();
+    initPathMenu();
     _chartConfig.resetEChartDiv();
     $("#value_format_dialog").dialog({
         buttons: [{
@@ -841,10 +842,47 @@ function initXAxisMenu(){
 }
 
 function initPathMenu(){
-    $("<div></div>").attr("id", "path_menu").appendTo($("body"))
-        .menu({
+    var menuData = [
+        {text:"子父集", name: "tree-structure", children:[
+            {text: "ID前置包含", name: "id-prefix"},
+            {text: "父对象ID设定", name: "pid-set"}
+        ]}
+    ]
 
-        })
+    var menu = $("<div></div>").attr("id", "path_menu").appendTo($("body"))
+        .menu({
+            miniWidth:80,
+            onClick:function(item){
+                if($(item.target).attr("hasChild")){
+                    return;
+                }else{
+
+                }
+            },
+            onShow: function(){
+
+            }
+        });
+    for(var i = 0; i < menuData.length; i++){
+        menu.menu("appendItem", {
+            text: menuData[i].text,
+            name:menuData[i].name,
+            id: "path_menu_"+menuData[i].name
+        });
+        $("#path_menu_"+menuData[i].name).attr("path_type", menuData[i].name);
+        if(menuData[i].children && menuData[i].children.length > 0){
+            $("#path_menu_"+menuData[i].name).attr("hasChild", "true");
+            for(var k = 0; k < menuData[i].children.length; k++){
+                menu.menu("appendItem", {
+                    parent: $("#path_menu_"+menuData[i].name)[0],
+                    text: menuData[i].children[k].text,
+                    name:menuData[i].children[k].name,
+                    id:"path_menu_"+menuData[i].children[k].name
+                });
+                $("#path_menu_"+menuData[i].children[k].name).attr("path_type", menuData[i].children[k].name);
+            }
+        }
+    }
 }
 
 

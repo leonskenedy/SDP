@@ -54,7 +54,6 @@ var _chartConfig = {
             second: "按秒"
         },
         append: function(element, isNew){
-            debugger;
             var data = element.__zzjz__;
             var column = _chartConfig.columnMap[data.fid];
             $(element).appendTo($(".zzjz-xaxis-div"));
@@ -115,6 +114,12 @@ var _chartConfig = {
                 $(element).attr("granularity", data.granularity).menubutton({
                     text: column.column_cn + " (" + _chartConfig.xAxis.menuMap[data.granularity]+")",
                     menu:"#mm_xaxis"
+                });
+            }
+            if(data.data_type  && data.data_type != "date"){
+                $(element).menubutton({
+                    text: column.column_cn,
+                    menu:"#path_menu"
                 });
             }
             if(isNew){
