@@ -234,99 +234,23 @@ $(document).ready(function(){
             }else{
                 window._dropped = false;
             }
+            var columnType = $(source).attr("column_type");
             var data = {
-                column_en: $(source).attr("column_en"),
-                column_cn: $(source).attr("column_cn"),
-                column_type: $(source).attr("column_type"),
-                class: "zzjz-axis-item",
-                id: +new Date(),
+                name: $(source).attr("column_cn"),
+                data_type:  columnType == "1" ? "number" : (columnType=="2"?"string":"date"),
+                is_new: false,
+                fid: $(source).attr("column_en"),
+                is_build_aggregated: 0,
+                uniq_id: _chartConfig.generateId(),
                 map_column: $(source).attr("map_column")
             }
-            if(data.column_type == "3"){
+            if(data.data_type == "date"){
                 data.granularity = "day"
             }
-            var axisItem = $("<a></a>");
-            for(var prop in data){
-                axisItem.attr(prop, data[prop]);
-            }
-            $(this).append(axisItem);
-            $("#"+data.id).menubutton({
-                plain: true,
-                text: data.column_cn + (data.granularity ? "(按日)" : ""),
-                hasDownArrow: false
-            });
-            if(data.column_type == "3"){
-                $("#"+data.id).menubutton({
-                    menu:"#mm_xaxis"
-                });
-            }
-            $("#"+data.id).draggable({
-                revert:true,
-                proxy: function(source){
-                    var p = $(source).clone();
-                    p.appendTo($("body"))
-                    return p;
-                }
-            });
-
-            $("#"+data.id).droppable({
-                accept: ".zzjz-column-div",
-                onDrop:function(e,source){
-                    $(".zzjz-xaxis-div").droppable("enable");
-                    $(".zzjz-xaxis-div").removeClass('zzjz-axis-over');
-                    var data = {
-                        column_en: $(this).attr("column_en"),
-                        column_cn: $(this).attr("column_cn"),
-                        column_type: $(this).attr("column_type"),
-                        class: "zzjz-level-item",
-                        id: _chartConfig.generateId(),
-                        map_column: $(this).attr("map_column")
-                    }
-                    var axisItem = $("<a></a>");
-                    for(var prop in data){
-                        axisItem.attr(prop, data[prop]);
-                    }
-                    axisItem.addClass("zzjz-level-item-selected")
-                    $(".zzjz-level-div").append(axisItem);
-                    $("#"+data.id).menubutton({
-                        plain: true,
-                        text: data.column_cn,
-                        hasDownArrow: false
-                    });
-                    data = {
-                        column_en: $(source).attr("column_en"),
-                        column_cn: $(source).attr("column_cn"),
-                        column_type: $(source).attr("column_type"),
-                        class: "zzjz-level-item",
-                        id: _chartConfig.generateId(),
-                        map_column: $(source).attr("map_column")
-                    }
-                    axisItem = $("<a></a>");
-                    for(var prop in data){
-                        axisItem.attr(prop, data[prop]);
-                    }
-                    $(".zzjz-level-div").append($("<span></span>").text(">"));
-                    $(".zzjz-level-div").append(axisItem);
-                    $("#"+data.id).menubutton({
-                        plain: true,
-                        text: data.column_cn,
-                        hasDownArrow: false
-                    });
-                    $(".zzjz-level-div").show();
-                    _chartConfig.resetEChartDiv();
-                    window._dropped = true;
-                },
-                onDragEnter:function(e, source){
-                    $(".zzjz-xaxis-div").droppable("disable")
-                    $(".zzjz-xaxis-div").addClass('zzjz-axis-over');
-                },
-                onDragLeave:function(e, source){
-                    $(".zzjz-xaxis-div").droppable("enable");
-                    $(".zzjz-xaxis-div").addClass('zzjz-axis-over');
-                }
-            })
+            var element = document.createElement("a");
+            _chartConfig.bind(element, data);
+            _chartConfig.xAxis.append(element, true);
             $(this).removeClass('zzjz-axis-over');
-            _chartConfig.addXAxis($("#"+data.id), true).resetEChartDiv();
         }
     });
     $('#mm').menu({
@@ -880,9 +804,10 @@ function initXAxisMenu(){
             if($(item.target).attr("hasChild")){
                 return;
             }else{
-                _hoverItem.attr("granularity", item.name)
+                _hoverItem.attr("granularity", item.name);
+                _hoverItem[0].__zzjz__.granularity = item.name;
                 _hoverItem.find(".l-btn-text").text(_hoverItem.attr("column_cn") + " ("+ item.text+")");
-                gatherData();
+                _chartConfig.drawChart();
             }
         },
         onShow: function(){
@@ -913,6 +838,13 @@ function initXAxisMenu(){
             }
         }
     }
+}
+
+function initPathMenu(){
+    $("<div></div>").attr("id", "path_menu").appendTo($("body"))
+        .menu({
+
+        })
 }
 
 

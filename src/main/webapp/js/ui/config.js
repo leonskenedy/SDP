@@ -53,7 +53,8 @@ var _chartConfig = {
             minute: "按分",
             second: "按秒"
         },
-        append: function(element){
+        append: function(element, isNew){
+            debugger;
             var data = element.__zzjz__;
             var column = _chartConfig.columnMap[data.fid];
             $(element).appendTo($(".zzjz-xaxis-div"));
@@ -110,11 +111,15 @@ var _chartConfig = {
                         $(".zzjz-xaxis-div").addClass('zzjz-axis-over');
                     }
                 });
-            if(data.granularity && column.data_type == "3"){
+            if(data.granularity && data.data_type == "date"){
                 $(element).attr("granularity", data.granularity).menubutton({
                     text: column.column_cn + " (" + _chartConfig.xAxis.menuMap[data.granularity]+")",
                     menu:"#mm_xaxis"
                 });
+            }
+            if(isNew){
+                _chartConfig.definition.meta.level[0].x.push(data);
+                _chartConfig.resetEChartDiv().drawChart();
             }
         }
     },
