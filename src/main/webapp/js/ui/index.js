@@ -856,7 +856,7 @@ function initPathMenu(){
                 if($(item.target).attr("hasChild")){
                     return;
                 }else{
-
+                    $("#path_menu_dialog").dialog("open");
                 }
             },
             onShow: function(){
@@ -883,6 +883,37 @@ function initPathMenu(){
             }
         }
     }
+
+    $("<div style='padding: 10'></div>").attr("id", "path_menu_dialog").appendTo($("body"))
+        .dialog({
+            title: "前置包含设定",
+            width: 400,
+            height: 200,
+            closed: true,
+            modal: true,
+            onOpen: function(){
+                $("#path_column").combobox("loadData", _chartConfig.columns)
+            },
+            buttons: [{
+                text:'保存',
+                iconCls:'icon-ok',
+                handler:function(){
+
+                }
+            },{
+                text:'取消',
+                handler:function(){
+                    $("#path_menu_dialog").dialog("close");
+                }
+            }]
+
+        }).append($("<label></label>").text("数据列:"))
+        .append($("<select id='path_column'></select>"));
+    $("#path_column").combobox({
+        data: [],
+        valueField: "column_en",
+        textField: "column_cn"
+    })
 }
 
 
